@@ -11,3 +11,18 @@ Code space
 2. spdlog: v1.14.1
 3. Catch2: v3.6.0
 4. pybind11: stable
+
+# how to add a C++20 module
+
+not support C++23 _import std_ yet
+
+```cmake
+add_library(hello STATIC)
+# Add sources.
+target_sources(hello
+  PUBLIC
+    FILE_SET CXX_MODULES 
+    FILES
+        hello.cpp
+)
+```
