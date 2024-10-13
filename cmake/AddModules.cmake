@@ -15,6 +15,7 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
 endif()
 
 
+set(SPDLOG_FMT_EXTERNAL "spdlog use external fmt" ON)
 option(SPDLOG_BUILD_TESTS "spdlog Build tests" OFF)
 option(SPDLOG_BUILD_EXAMPLE "spdlog Build example" OFF)
 
