@@ -10,3 +10,9 @@
 [submodule "module/Catch2"]
 	path = module/Catch2
 	url = git@github.com:catchorg/Catch2.git
+[submodule "module/json"]
+	path = module/json
+	url = git@github.com:nlohmann/json.git
+[submodule "module/glfw"]
+	path = module/glfw
+	url = git@github.com:glfw/glfw.git
