@@ -1,9 +1,6 @@
-cmake_minimum_required(VERSION 3.29)
+cmake_minimum_required(VERSION 3.30)
 
-project(XIN
-    VERSION 0.1
-    LANGUAGES C CXX
-)
+project(XIN VERSION 0.1)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
