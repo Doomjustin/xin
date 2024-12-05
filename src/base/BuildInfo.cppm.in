@@ -1,0 +1,16 @@
+module;
+
+#include <filesystem>
+#include <string>
+
+export module xin.build_info;
+
+export namespace xin {
+
+const std::string PROJECT_VERSION = "@PROJECT_VERSION@";
+const std::filesystem::path PROJECT_DIR = "@PROJECT_SOURCE_DIR@";
+
+constexpr int OPENGL_CORE_VERSION_MAJOR = @OPENGL_CORE_VERSION_MAJOR@;
+constexpr int OPENGL_CORE_VERSION_MINOR = @OPENGL_CORE_VERSION_MAJOR@;
+
+} // namespace xin

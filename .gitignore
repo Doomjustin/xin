@@ -49,6 +49,6 @@ cmake-build-release/
 out/
 
 # customer
-**/BuildInfo.h
+**/BuildInfo.*
 
 extern/

@@ -7,16 +7,15 @@ module;
 #include <string_view>
 #include <vector>
 
-export module Xin.Database;
+export module xin.database;
 
-import Xin.Utility;
+import xin.utility;
 
-namespace xin {
+namespace xin::database {
 
-using SequenceNumber = std::uint64_t;
+export using SequenceNumber = std::uint64_t;
 
-export
-class WriteBatch {
+export class WriteBatch {
 public:
     void put(std::string_view key, std::string_view value)
     {
@@ -82,8 +81,7 @@ private:
 };
 
 
-export
-class Database: NonCopyable {
+export class Database: NonCopyable {
 public:
     explicit Database(std::string_view name)
       : name_{ name }
@@ -103,4 +101,4 @@ private:
     std::string name_;
 };
 
-} // namespace xin
+} // namespace xin::database

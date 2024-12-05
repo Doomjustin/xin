@@ -2,11 +2,10 @@ module;
 
 #include <type_traits>
 
-export module Xin.Utility;
+export module xin.utility;
 
-namespace xin {
+export namespace xin {
 
-export
 class NonCopyable {
 public:
     NonCopyable(const NonCopyable&) = delete;
@@ -22,7 +21,6 @@ protected:
 };
 
 
-export
 template<class Enum>
 constexpr std::underlying_type_t<Enum> to_underlying(Enum e) noexcept
 {

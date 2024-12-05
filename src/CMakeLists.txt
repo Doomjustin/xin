@@ -1,21 +1,14 @@
+add_subdirectory(base)
 add_subdirectory(database)
+add_subdirectory(game_engine)
 
-add_library(${PROJECT_NAME} STATIC)
+add_library(${PROJECT_NAME} INTERFACE)
 
 add_library(xin::xin ALIAS ${PROJECT_NAME})
 
-target_sources(${PROJECT_NAME} 
-    PUBLIC
-        FILE_SET CXX_MODULES 
-    FILES
-        "Database.cppm"
-        "Utility.cppm"
-)
-
-target_link_libraries(${PROJECT_NAME} 
-    PUBLIC
-        fmt::fmt
-        spdlog::spdlog
-        nlohmann_json::nlohmann_json
+target_link_libraries(${PROJECT_NAME}
+    INTERFACE
+        xin::base
         xin::database
+        xin::game_engine
 )
