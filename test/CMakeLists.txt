@@ -6,3 +6,4 @@ macro(add_catch2_test target)
     target_link_libraries(${target} PRIVATE Catch2::Catch2WithMain)
     catch_discover_tests(${target})
 endmacro()
+

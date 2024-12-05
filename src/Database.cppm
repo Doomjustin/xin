@@ -1,19 +1,23 @@
 module;
 
 #include <cstdint>
+#include <optional>
 #include <ostream>
+#include <string>
 #include <string_view>
 #include <vector>
 
-export module Xin.Database:WriteBatch;
+export module Xin.Database;
 
+import Xin.Utility;
 
 namespace xin {
 
-export class WriteBatch {
-public:
-    using SequenceNumber = std::uint64_t;
+using SequenceNumber = std::uint64_t;
 
+export
+class WriteBatch {
+public:
     void put(std::string_view key, std::string_view value)
     {
         records_.emplace_back(key, value);
@@ -44,7 +48,7 @@ private:
         explicit Record(std::string_view key)
           : type_{ Type::Deletion }, key_{ key }
         {}
-        
+
         std::string key() const noexcept { return key_; }
 
         std::string value() const noexcept { return value_; }
@@ -77,4 +81,26 @@ private:
     std::vector<Record> records_;
 };
 
-} // namespace xin 
+
+export
+class Database: NonCopyable {
+public:
+    explicit Database(std::string_view name)
+      : name_{ name }
+    {}
+
+    virtual ~Database();
+
+    void put(std::string_view key, std::string_view value);
+
+    void remove(std::string_view key);
+
+    std::optional<std::string> get(std::string_view key) const;
+
+    virtual void write(const WriteBatch& batch) = 0;
+
+private:
+    std::string name_;
+};
+
+} // namespace xin
