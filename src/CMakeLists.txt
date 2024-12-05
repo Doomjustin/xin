@@ -1,6 +1,7 @@
 add_subdirectory(base)
 add_subdirectory(database)
 add_subdirectory(game_engine)
+add_subdirectory(stb)
 
 add_library(${PROJECT_NAME} INTERFACE)
 

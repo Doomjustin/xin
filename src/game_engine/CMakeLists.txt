@@ -1,7 +1,4 @@
-add_library(${PROJECT_NAME}_GAME_ENGINE OBJECT
-    stb_image.cpp
-    stb_image.h
-)
+add_library(${PROJECT_NAME}_GAME_ENGINE OBJECT)
 
 add_library(xin::game_engine ALIAS ${PROJECT_NAME}_GAME_ENGINE)
 
@@ -17,4 +14,5 @@ target_link_libraries(${PROJECT_NAME}_GAME_ENGINE
         spdlog::spdlog
         glad::glad
         glfw
+        stb
 )
