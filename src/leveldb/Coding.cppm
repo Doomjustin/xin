@@ -5,9 +5,9 @@ module;
 #include <istream>
 #include <ostream>
 
-export module xin.database.coding;
+export module xin.leveldb.coding;
 
-namespace xin::database {
+namespace xin::leveldb {
 
 constexpr int VARINT_BYTE_SIZE = 7;
 
@@ -76,4 +76,4 @@ T decode_varint(std::istream& is)
 }
 
 
-} // export namespace xin::database
+} // namespace xin::leveldb

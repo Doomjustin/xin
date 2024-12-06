@@ -4,7 +4,7 @@ macro(add_xin_database_test target source)
     target_link_libraries(${target}
         PRIVATE
             Catch2::Catch2WithMain
-            xin::database
+            xin::leveldb
         )
     catch_discover_tests(${target})
 endmacro()

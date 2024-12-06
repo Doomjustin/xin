@@ -4,11 +4,11 @@
 #include <cstdint>
 #include <sstream>
 
-import xin.database.coding;
+import xin.leveldb.coding;
 
 TEMPLATE_TEST_CASE("test coding", "[leveldb]", std::uint32_t, std::uint64_t)
 {
-    using namespace xin::database;
+    using namespace xin::leveldb;
 
     SECTION("test fixed coding")
     {

@@ -4,11 +4,11 @@
 
 #include <sstream>
 
-import xin.database;
+import xin.leveldb;
 
 TEST_CASE("test write batch", "[database]")
 {
-    using namespace xin::database;
+    using namespace xin::leveldb;
 
     SECTION("test coding")
     {
@@ -78,5 +78,4 @@ TEST_CASE("test write batch", "[database]")
         const std::string expected{ "0\n[value]key1: value1\n[deleted]key1\n[value]key2: value2\n[deleted]key3\n" };
         REQUIRE_THAT(ss.str(), Catch::Matchers::Equals(expected));
     }
-
 }
