@@ -1,7 +1,7 @@
 module;
 
+#include <deque>
 #include <filesystem>
-#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -14,7 +14,11 @@ import xin.utility;
 
 namespace xin::leveldb {
 
-export class LevelDB: NonCopyable {
+struct Writer {
+    WriteBatch batch;
+};
+
+export class LevelDB final: NonCopyable {
 public:
     explicit LevelDB(std::string_view name);
 
@@ -24,12 +28,13 @@ public:
 
     void remove(std::string_view key);
 
-    virtual std::optional<std::string> get(std::string_view key) const = 0;
+    std::optional<std::string> get(std::string_view key) const;
 
-    virtual void write(WriteBatch batch) = 0;
+    void write(WriteBatch batch);
 
 private:
     std::string name_;
+    std::deque<Writer> writers_;
 };
 
 } // namespace xin::leveldb

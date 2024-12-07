@@ -29,4 +29,14 @@ void LevelDB::remove(std::string_view key)
     write(std::move(batch));
 }
 
+std::optional<std::string> LevelDB::get(std::string_view key) const
+{
+    return {};
+}
+
+void LevelDB::write(WriteBatch batch)
+{
+
+}
+
 } // namespace xin::leveldb

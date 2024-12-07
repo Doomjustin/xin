@@ -9,5 +9,6 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 include(NoInSourceBuild)
 include(AddModules)
 
+add_subdirectory(play_ground)
 add_subdirectory(src bin)
 add_subdirectory(test)
