@@ -38,6 +38,8 @@
 - **测试框架 (Catch2 v3):** - 编写单元测试必须使用 **Catch2 v3** 框架的语法。
   - 必须使用 `#include <catch2/catch_test_macros.hpp>`，**绝对禁止**使用旧版的 `#include <catch.hpp>` 或定义 `#define CATCH_CONFIG_MAIN`。
   - 测试结构必须使用 `TEST_CASE` 和 `SECTION`，断言必须使用 `REQUIRE` 或 `CHECK`。
+- **单测描述语言：** `TEST_CASE` 与 `SECTION` 的描述文本默认使用中文；技术术语可保留英文原文（如 `span`、`error_code`、`format_as`）。
+- **单测数据与可读性：** 避免为单次使用的简单字面量（如单字符、`0`）引入无意义 `constexpr` 包装；仅在复用或提升语义时提取常量。若存在重复类型转换（如 `char` 到 `std::byte`），优先使用局部小型辅助函数降低噪音。
 
 ## 7. API 文档与注释 (Doxygen)
 - 遵循 LLVM 编码规范，**优先使用单行 Doxygen 注释 `///`** 来标注函数、变量和枚举。

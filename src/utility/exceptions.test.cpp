@@ -17,10 +17,9 @@ constexpr std::errc errc_value = std::errc::permission_denied;
 
 } // namespace
 
-TEST_CASE("throw_system_error with explicit error code throws std::system_error",
-          "[utility][exceptions]")
+TEST_CASE("throw_system_error 使用显式错误码时抛出 std::system_error", "[utility][exceptions]")
 {
-    SECTION("error code/category/message are preserved")
+    SECTION("错误码、category 和消息均被保留")
     {
         try {
             xin::throw_system_error(explicit_error_value, "{}: {}", explicit_message,
@@ -39,9 +38,9 @@ TEST_CASE("throw_system_error with explicit error code throws std::system_error"
     }
 }
 
-TEST_CASE("throw_system_error with errno throws std::system_error", "[utility][exceptions]")
+TEST_CASE("throw_system_error 使用 errno 时抛出 std::system_error", "[utility][exceptions]")
 {
-    SECTION("uses current errno as error value")
+    SECTION("使用当前 errno 作为错误值")
     {
         errno = EINVAL;
 
@@ -61,9 +60,9 @@ TEST_CASE("throw_system_error with errno throws std::system_error", "[utility][e
     }
 }
 
-TEST_CASE("unexpected_system_error returns unexpected<error_code>", "[utility][exceptions]")
+TEST_CASE("unexpected_system_error 返回 unexpected<error_code>", "[utility][exceptions]")
 {
-    SECTION("without argument uses errno + system_category")
+    SECTION("无参数时使用 errno 和 system_category")
     {
         errno = ENOENT;
 
@@ -73,7 +72,7 @@ TEST_CASE("unexpected_system_error returns unexpected<error_code>", "[utility][e
         CHECK(result.error().category() == std::system_category());
     }
 
-    SECTION("with errc argument uses make_error_code(errc)")
+    SECTION("传入 errc 时使用 make_error_code(errc)")
     {
         const auto result = xin::unexpected_system_error(errc_value);
         const auto expected = std::make_error_code(errc_value);

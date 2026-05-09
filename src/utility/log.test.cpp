@@ -46,14 +46,14 @@ constexpr auto critical_text = std::string_view{ "critical {}" };
 
 } // namespace
 
-TEST_CASE("xin::log forwards level and pattern changes", "[utility][log]")
+TEST_CASE("xin::log 转发 level 和 pattern 变更", "[utility][log]")
 {
     auto logger = std::make_unique<capturing_logger>();
     auto* logger_ptr = logger.get();
 
     xin::log::set_default_logger(std::move(logger));
 
-    SECTION("level is forwarded")
+    SECTION("level 变更被转发")
     {
         xin::log::set_level(xin::LogLevel::Warning);
 
@@ -62,7 +62,7 @@ TEST_CASE("xin::log forwards level and pattern changes", "[utility][log]")
         REQUIRE(logger_ptr->set_level_calls == 1U);
     }
 
-    SECTION("pattern is forwarded")
+    SECTION("pattern 变更被转发")
     {
         xin::log::set_pattern(pattern_value);
 
@@ -71,7 +71,7 @@ TEST_CASE("xin::log forwards level and pattern changes", "[utility][log]")
     }
 }
 
-TEST_CASE("xin::log dispatches formatted messages", "[utility][log]")
+TEST_CASE("xin::log 分发格式化后的消息", "[utility][log]")
 {
     auto logger = std::make_unique<capturing_logger>();
     auto* logger_ptr = logger.get();

@@ -9,23 +9,22 @@ namespace {
 
 constexpr auto expected_text = std::string_view{ "xin" };
 constexpr auto expected_size = expected_text.size();
-constexpr auto zero_size = std::size_t{ 0 };
 
-constexpr auto char_x = 'x';
-constexpr auto char_i = 'i';
-constexpr auto char_n = 'n';
-constexpr auto char_x_upper = 'X';
+constexpr auto to_byte(char c) -> std::byte
+{
+    return static_cast<std::byte>(c);
+}
 
 } // namespace
 
-TEST_CASE("xin::as_string supports const byte span", "[utility][as_string]")
+TEST_CASE("xin::as_string 支持 const byte span", "[utility][as_string]")
 {
-    SECTION("returns correct view for const span")
+    SECTION("const span 返回正确视图")
     {
         const std::array<std::byte, expected_size> bytes{
-            static_cast<std::byte>(char_x),
-            static_cast<std::byte>(char_i),
-            static_cast<std::byte>(char_n),
+            to_byte('x'),
+            to_byte('i'),
+            to_byte('n'),
         };
 
         const std::span<const std::byte> data{ bytes };
@@ -37,14 +36,14 @@ TEST_CASE("xin::as_string supports const byte span", "[utility][as_string]")
     }
 }
 
-TEST_CASE("xin::as_string supports mutable byte span", "[utility][as_string]")
+TEST_CASE("xin::as_string 支持 mutable byte span", "[utility][as_string]")
 {
-    SECTION("returns correct view for mutable span")
+    SECTION("mutable byte span 返回正确视图")
     {
         std::array<std::byte, expected_size> bytes{
-            static_cast<std::byte>(char_x),
-            static_cast<std::byte>(char_i),
-            static_cast<std::byte>(char_n),
+            to_byte('x'),
+            to_byte('i'),
+            to_byte('n'),
         };
 
         std::span<std::byte> data{ bytes };
@@ -55,43 +54,43 @@ TEST_CASE("xin::as_string supports mutable byte span", "[utility][as_string]")
         REQUIRE(text.size() == expected_size);
     }
 
-    SECTION("returned string_view reflects underlying data changes")
+    SECTION("mutable byte span 返回的 string_view 反映底层数据变化")
     {
         std::array<std::byte, expected_size> bytes{
-            static_cast<std::byte>(char_x),
-            static_cast<std::byte>(char_i),
-            static_cast<std::byte>(char_n),
+            to_byte('x'),
+            to_byte('i'),
+            to_byte('n'),
         };
         std::span<std::byte> data{ bytes };
 
         const auto text = xin::as_string(data);
-        bytes.front() = static_cast<std::byte>(char_x_upper);
+        bytes.front() = to_byte('X');
 
-        REQUIRE(text.front() == char_x_upper);
+        REQUIRE(text.front() == 'X');
     }
 }
 
-TEST_CASE("xin::as_string handles empty spans", "[utility][as_string]")
+TEST_CASE("xin::as_string 处理空 span", "[utility][as_string]")
 {
-    SECTION("const span empty case")
+    SECTION("const span 空输入场景")
     {
-        const std::array<std::byte, zero_size> bytes{};
+        const std::array<std::byte, 0> bytes{};
         const std::span<const std::byte> data{ bytes };
 
         const auto text = xin::as_string(data);
 
         REQUIRE(text.empty());
-        REQUIRE(text.size() == zero_size);
+        REQUIRE(text.size() == 0U);
     }
 
-    SECTION("mutable span empty case")
+    SECTION("mutable span 空输入场景")
     {
-        std::array<std::byte, zero_size> bytes{};
+        std::array<std::byte, 0> bytes{};
         std::span<std::byte> data{ bytes };
 
         const auto text = xin::as_string(data);
 
         REQUIRE(text.empty());
-        REQUIRE(text.size() == zero_size);
+        REQUIRE(text.size() == 0U);
     }
 }

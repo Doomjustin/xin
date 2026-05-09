@@ -22,7 +22,7 @@ constexpr double exponential_lambda = 1.25;
 
 } // namespace
 
-TEST_CASE("xin::random seed makes sequences repeatable", "[utility][random]")
+TEST_CASE("xin::random seed 使序列可复现", "[utility][random]")
 {
     xin::random::seed(seed_value);
 
@@ -37,7 +37,7 @@ TEST_CASE("xin::random seed makes sequences repeatable", "[utility][random]")
     REQUIRE(xin::random::uniform<double>(floating_high) == first_double);
 }
 
-TEST_CASE("xin::random bernoulli and uniform respect their bounds", "[utility][random]")
+TEST_CASE("xin::random bernoulli 和 uniform 满足边界约束", "[utility][random]")
 {
     xin::random::seed(seed_value);
 
@@ -61,7 +61,7 @@ TEST_CASE("xin::random bernoulli and uniform respect their bounds", "[utility][r
     REQUIRE(floating_from_zero < floating_high);
 }
 
-TEST_CASE("xin::random distributions return valid values", "[utility][random]")
+TEST_CASE("xin::random 各分布返回有效值", "[utility][random]")
 {
     xin::random::seed(seed_value);
 
@@ -80,7 +80,7 @@ TEST_CASE("xin::random distributions return valid values", "[utility][random]")
     REQUIRE(std::isfinite(exponential_value));
 }
 
-TEST_CASE("xin::random shuffle choice and sample behave consistently", "[utility][random]")
+TEST_CASE("xin::random shuffle、choice 和 sample 行为一致", "[utility][random]")
 {
     xin::random::seed(seed_value);
 

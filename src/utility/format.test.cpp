@@ -71,49 +71,49 @@ constexpr auto expected_ostream = std::string_view{ "ostream(17)" };
 
 } // namespace
 
-TEST_CASE("xin::format supports format_as", "[utility][format]")
+TEST_CASE("xin::format 支持 format_as", "[utility][format]")
 {
     const auto text = std::format("{}", format_as_type{ 7 });
 
     REQUIRE(text == expected_format_as);
 }
 
-TEST_CASE("xin::format prefers format_as over to_string", "[utility][format]")
+TEST_CASE("xin::format 优先使用 format_as 而不是 to_string", "[utility][format]")
 {
     const auto text = std::format("{}", precedence_type{ 9 });
 
     REQUIRE(text == expected_precedence);
 }
 
-TEST_CASE("xin::format supports to_string", "[utility][format]")
+TEST_CASE("xin::format 支持 to_string", "[utility][format]")
 {
     const auto text = std::format("{}", to_string_type{ 11 });
 
     REQUIRE(text == expected_to_string);
 }
 
-TEST_CASE("xin::format supports to_repr", "[utility][format]")
+TEST_CASE("xin::format 支持 to_repr", "[utility][format]")
 {
     const auto text = std::format("{}", to_repr_type{ 13 });
 
     REQUIRE(text == expected_to_repr);
 }
 
-TEST_CASE("xin::format supports enum formatting", "[utility][format]")
+TEST_CASE("xin::format 支持 enum 格式化", "[utility][format]")
 {
     const auto text = std::format("{}", sample_enum::alpha);
 
     REQUIRE(text == expected_enum);
 }
 
-TEST_CASE("xin::format supports ostream fallback", "[utility][format]")
+TEST_CASE("xin::format 支持 ostream 回退格式化", "[utility][format]")
 {
     const auto text = std::format("{}", ostream_type{ 17 });
 
     REQUIRE(text == expected_ostream);
 }
 
-TEST_CASE("xin::format formats std::error_code as message", "[utility][format]")
+TEST_CASE("xin::format 将 std::error_code 格式化为 message", "[utility][format]")
 {
     const auto error_code = std::make_error_code(std::errc::permission_denied);
 
