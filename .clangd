@@ -10,6 +10,8 @@ Diagnostics:
       - "modernize-*"
       - "performance-*"
       - "readability-*"
+    Remove:
+      - "readability-braces-around-statements"
 
 InlayHints:
   Enabled: true
