@@ -6,10 +6,14 @@ export namespace xin {
 
 /// @brief 将连续只读区间转换为只读字节视图。
 /// @tparam T 满足 std::ranges::contiguous_range 的区间类型。
-/// @param range 输入区间，底层存储需为连续内存。
+/// @param[in] range 输入区间，底层存储需为连续内存。
 /// @return 与输入区间共享同一段内存的 std::span<const std::byte>。
 /// @pre range 的底层对象在返回视图的使用期内保持有效。
 /// @note 本函数不分配内存、不拷贝数据。
+/// ```cpp
+/// std::vector<int> values{ 1, 2, 3 };
+/// auto bytes = xin::buffer(values);
+/// ```
 template <std::ranges::contiguous_range T>
 auto buffer(const T& range) noexcept -> std::span<const std::byte>
 {
@@ -18,7 +22,7 @@ auto buffer(const T& range) noexcept -> std::span<const std::byte>
 
 /// @brief 将连续可写区间转换为可写字节视图。
 /// @tparam T 满足 std::ranges::contiguous_range 且元素为可修改引用的区间类型。
-/// @param range 输入区间，底层存储需为连续内存。
+/// @param[in] range 输入区间，底层存储需为连续内存。
 /// @return 与输入区间共享同一段内存的 std::span<std::byte>。
 /// @pre range 的底层对象在返回视图的使用期内保持有效。
 /// @note 本函数不分配内存、不拷贝数据。

@@ -14,8 +14,11 @@ module;
 export module xin.utility.format;
 
 /// @brief 将 std::error_code 转换为其错误消息字符串。
-/// @param error_code 需要转换的错误码。
+/// @param[in] error_code 需要转换的错误码。
 /// @return 错误码对应的消息文本。
+/// ```cpp
+/// const auto text = std::format("{}", std::make_error_code(std::errc::permission_denied));
+/// ```
 export auto format_as(const std::error_code& error_code) -> std::string
 {
     return error_code.message();
@@ -57,6 +60,9 @@ template <typename T>
     requires xin::has_format_as<T>
 struct std::formatter<T> : std::formatter<decltype(format_as(std::declval<T>()))> {
     /// @brief 将值先转换为 format_as 返回值，再交给基础 formatter 格式化。
+    /// @param[in] value 待格式化值。
+    /// @param[in] ctx 格式化上下文。
+    /// @return 格式化迭代器。
     auto format(const T& value, auto& ctx) const
     {
         return std::formatter<decltype(format_as(value))>::format(format_as(value), ctx);
@@ -69,6 +75,9 @@ template <typename T>
     requires(!xin::has_format_as<T>) && xin::has_to_string<T>
 struct std::formatter<T> : std::formatter<std::string> {
     /// @brief 使用 to_string 的结果作为格式化内容。
+    /// @param[in] value 待格式化值。
+    /// @param[in] ctx 格式化上下文。
+    /// @return 格式化迭代器。
     auto format(const T& value, auto& ctx) const
     {
         return std::formatter<std::string>::format(value.to_string(), ctx);
@@ -81,6 +90,9 @@ template <typename T>
     requires(!xin::has_format_as<T>) && (!xin::has_to_string<T>) && xin::has_to_repr<T>
 struct std::formatter<T> : std::formatter<std::string> {
     /// @brief 使用 to_repr 的结果作为格式化内容。
+    /// @param[in] value 待格式化值。
+    /// @param[in] ctx 格式化上下文。
+    /// @return 格式化迭代器。
     auto format(const T& value, auto& ctx) const
     {
         return std::formatter<std::string>::format(value.to_repr(), ctx);
@@ -94,6 +106,9 @@ template <typename T>
             std::is_enum_v<T>
 struct std::formatter<T> : std::formatter<std::string_view> {
     /// @brief 使用枚举项名称作为格式化内容。
+    /// @param[in] value 待格式化值。
+    /// @param[in] ctx 格式化上下文。
+    /// @return 格式化迭代器。
     auto format(const T& value, auto& ctx) const
     {
         return std::formatter<std::string_view>::format(magic_enum::enum_name(value), ctx);
@@ -107,6 +122,9 @@ template <typename T>
             xin::user_defined_type<T> && xin::has_ostream<T>
 struct std::formatter<T> : std::formatter<std::string> {
     /// @brief 先写入字符串流，再将结果作为格式化内容。
+    /// @param[in] value 待格式化值。
+    /// @param[in] ctx 格式化上下文。
+    /// @return 格式化迭代器。
     auto format(const T& value, auto& ctx) const
     {
         std::ostringstream stream;

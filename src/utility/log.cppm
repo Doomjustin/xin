@@ -15,7 +15,6 @@ enum class LogLevel : std::uint8_t { Trace, Debug, Info, Warning, Error, Critica
 /// @brief 日志记录器抽象基类。
 class Logger {
 public:
-    /// @brief 默认构造。
     Logger() = default;
 
     Logger(const Logger&) = delete;
@@ -24,71 +23,44 @@ public:
     Logger(Logger&&) = default;
     auto operator=(Logger&&) -> Logger& = default;
 
-    /// @brief 虚析构。
     virtual ~Logger() = default;
 
-    /// @brief 记录 Trace 级别日志。
-    /// @tparam Args 格式化参数类型。
-    /// @param fmt 格式字符串。
-    /// @param args 格式化参数。
     template <typename... Args>
     void trace(std::format_string<Args...> fmt, Args&&... args)
     {
         log(LogLevel::Trace, std::format(fmt, std::forward<Args>(args)...));
     }
 
-    /// @brief 记录 Debug 级别日志。
-    /// @tparam Args 格式化参数类型。
-    /// @param fmt 格式字符串。
-    /// @param args 格式化参数。
     template <typename... Args>
     void debug(std::format_string<Args...> fmt, Args&&... args)
     {
         log(LogLevel::Debug, std::format(fmt, std::forward<Args>(args)...));
     }
 
-    /// @brief 记录 Info 级别日志。
-    /// @tparam Args 格式化参数类型。
-    /// @param fmt 格式字符串。
-    /// @param args 格式化参数。
     template <typename... Args>
     void info(std::format_string<Args...> fmt, Args&&... args)
     {
         log(LogLevel::Info, std::format(fmt, std::forward<Args>(args)...));
     }
 
-    /// @brief 记录 Warning 级别日志。
-    /// @tparam Args 格式化参数类型。
-    /// @param fmt 格式字符串。
-    /// @param args 格式化参数。
     template <typename... Args>
     void warning(std::format_string<Args...> fmt, Args&&... args)
     {
         log(LogLevel::Warning, std::format(fmt, std::forward<Args>(args)...));
     }
 
-    /// @brief 记录 Error 级别日志。
-    /// @tparam Args 格式化参数类型。
-    /// @param fmt 格式字符串。
-    /// @param args 格式化参数。
     template <typename... Args>
     void error(std::format_string<Args...> fmt, Args&&... args)
     {
         log(LogLevel::Error, std::format(fmt, std::forward<Args>(args)...));
     }
 
-    /// @brief 记录 Critical 级别日志。
-    /// @tparam Args 格式化参数类型。
-    /// @param fmt 格式字符串。
-    /// @param args 格式化参数。
     template <typename... Args>
     void critical(std::format_string<Args...> fmt, Args&&... args)
     {
         log(LogLevel::Critical, std::format(fmt, std::forward<Args>(args)...));
     }
 
-    /// @brief 设置当前日志等级。
-    /// @param level 目标日志等级。
     void set_level(const LogLevel level) noexcept
     {
         level_ = level;
@@ -96,14 +68,11 @@ public:
     }
 
     [[nodiscard]]
-    /// @brief 获取当前日志等级。
     constexpr auto level() const noexcept -> LogLevel
     {
         return level_;
     }
 
-    /// @brief 设置日志输出格式。
-    /// @param pattern 格式字符串。
     void set_pattern(const std::string_view pattern)
     {
         set_pattern_impl(pattern);
@@ -123,87 +92,56 @@ private:
 struct log {
     log() = delete;
 
-    /// @brief 设置全局日志等级。
-    /// @param level 目标日志等级。
     static void set_level(const LogLevel level)
     {
         logger().set_level(level);
     }
 
-    /// @brief 获取全局日志等级。
     static auto level() noexcept -> LogLevel
     {
         return logger().level();
     }
 
-    /// @brief 设置全局日志输出格式。
-    /// @param pattern 格式字符串。
     static void set_pattern(const std::string_view pattern)
     {
         logger().set_pattern(pattern);
     }
 
-    /// @brief 替换默认日志记录器。
-    /// @param logger 新的记录器实例。
     static void set_default_logger(std::unique_ptr<Logger> logger)
     {
         default_logger = std::move(logger);
     }
 
-    /// @brief 记录 Trace 级别日志。
-    /// @tparam Args 格式化参数类型。
-    /// @param fmt 格式字符串。
-    /// @param args 格式化参数。
     template <typename... Args>
     static void trace(std::format_string<Args...> fmt, Args&&... args)
     {
         logger().trace(fmt, std::forward<Args>(args)...);
     }
 
-    /// @brief 记录 Debug 级别日志。
-    /// @tparam Args 格式化参数类型。
-    /// @param fmt 格式字符串。
-    /// @param args 格式化参数。
     template <typename... Args>
     static void debug(std::format_string<Args...> fmt, Args&&... args)
     {
         logger().debug(fmt, std::forward<Args>(args)...);
     }
 
-    /// @brief 记录 Info 级别日志。
-    /// @tparam Args 格式化参数类型。
-    /// @param fmt 格式字符串。
-    /// @param args 格式化参数。
     template <typename... Args>
     static void info(std::format_string<Args...> fmt, Args&&... args)
     {
         logger().info(fmt, std::forward<Args>(args)...);
     }
 
-    /// @brief 记录 Warning 级别日志。
-    /// @tparam Args 格式化参数类型。
-    /// @param fmt 格式字符串。
-    /// @param args 格式化参数。
     template <typename... Args>
     static void warning(std::format_string<Args...> fmt, Args&&... args)
     {
         logger().warning(fmt, std::forward<Args>(args)...);
     }
 
-    /// @brief 记录 Error 级别日志。
-    /// @tparam Args 格式化参数类型。
-    /// @param fmt 格式字符串。
-    /// @param args 格式化参数。
     template <typename... Args>
     static void error(std::format_string<Args...> fmt, Args&&... args)
     {
         logger().error(fmt, std::forward<Args>(args)...);
     }
 
-    /// @brief 记录 Critical 级别日志。
-    /// @tparam Args 格式化参数类型。
-    /// @param fmt 格式字符串。
-    /// @param args 格式化参数。
     template <typename... Args>
     static void critical(std::format_string<Args...> fmt, Args&&... args)
     {
@@ -228,7 +166,6 @@ namespace xin {
 /// @brief 基于 spdlog 的默认日志实现。
 class Spdlog : public Logger {
 public:
-    /// @brief 构造并初始化默认 spdlog 记录器。
     Spdlog()
     {
         const auto logger = spdlog::stdout_color_mt("xin");
