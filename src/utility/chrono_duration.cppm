@@ -1,4 +1,4 @@
-export module xin.utility.buffer;
+export module xin.utility.chrono_duration;
 
 import std;
 
