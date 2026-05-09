@@ -1,17 +1,29 @@
-必须使用 Conventional Commits 规范。
-格式为：<type>(<scope>): <subject>。不要换行，只保留标题行。
-<type> 只能是：
-- feat: 新功能 (如 C++ 模块增加)
-- fix: 修复 Bug
-- refactor: 重构代码
-- style: 代码格式化
-- test: 增加或修改 Catch2 测试
-- build: 影响 CMake 或 vcpkg 的修改
-- docs: 补充 Doxygen
-- chore: 杂项
-<scope> 必须是英文，代表修改的模块名 (如 network, core)。
-<subject> 必须是中文，简明扼要，动词开头。
-示例：refactor(core): 将裸指针替换为智能指针
+必须严格遵守 Conventional Commits 规范，并包含清晰的上下文。
+
+【1. 格式要求】
+提交信息必须包含三部分，用空行隔开：
+1. 标题行 (Header)
+2. 空行
+3. 详细说明 (Body)
+
+【2. 标题行 (Header)】
+格式：<type>(<scope>): <subject>
+- <type> 只能是：feat, fix, refactor, perf, style, test, build, docs, chore。
+- <scope> 只能是：core, network, ui, database (或省略)。
+- <subject> 必须是中文，简明扼要，说明做了什么。
+
+【3. 详细说明 (Body) - 核心要求】
+- 必须解释【为什么】要做这个修改 (Motivation) 以及【修改了什么核心逻辑】。
+- 绝对不要像报流水账一样列出每个文件改了哪一行代码（代码 Diff 已经能说明 HOW）。
+- 如果引入了新的 C++20 特性或特定的架构设计（如智能指针、Modules），请在此说明原因。
+
+【4. 示例】
+refactor(network): 将原生 Socket 替换为 Asio 异步模型
+
+之前使用阻塞式 Socket 导致高并发时线程开销过大。
+本次重构引入了基于 C++20 协程的异步 I/O 模型：
+1. 剥离了底层的裸指针管理，全部采用 std::unique_ptr。
+2. 提升了网络层的吞吐量，并解决了极端情况下的死锁隐患。
 
 【极度重要的原子性原则】：
 每次生成 Commit 前，请分析用户暂存区 (Staged) 的代码。
