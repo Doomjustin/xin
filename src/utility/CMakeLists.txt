@@ -20,6 +20,7 @@ target_sources(xin.utility
 
 target_link_libraries(xin.utility 
     PRIVATE 
+        Microsoft.GSL::GSL
         spdlog::spdlog
         magic_enum::magic_enum
 )
