@@ -38,3 +38,10 @@
 - **测试框架 (Catch2 v3):** - 编写单元测试必须使用 **Catch2 v3** 框架的语法。
   - 必须使用 `#include <catch2/catch_test_macros.hpp>`，**绝对禁止**使用旧版的 `#include <catch.hpp>` 或定义 `#define CATCH_CONFIG_MAIN`。
   - 测试结构必须使用 `TEST_CASE` 和 `SECTION`，断言必须使用 `REQUIRE` 或 `CHECK`。
+
+## 7. API 文档与注释 (Doxygen)
+- 当被要求添加注释时，必须使用标准 **Doxygen** 格式 (`/** ... */`)。
+- 必须包含 `@brief` 描述。
+- 必须对输入/输出参数使用 `@param [in]/[out]`。
+- 必须使用 `@return` 说明返回值含义。
+- **强制要求：** 对于核心业务类、复杂逻辑方法、或涉及 C++20 新特性的接口，必须在 Doxygen 注释的末尾使用 Markdown 语法 (` ```cpp ... ``` `) 附带一小段**使用示例代码**。
