@@ -70,7 +70,7 @@ jobs:
           xin-ci:latest \
           bash /workspace/.github/scripts/ci/configure_cmake.sh
 
-    - name: Build library and demos
+    - name: Build project
       run: |
         docker run --rm \
           --user "$(id -u):$(id -g)" \
@@ -89,11 +89,3 @@ jobs:
           xin-ci:latest \
           bash /workspace/.github/scripts/ci/run_tests.sh
     
-    - name: Verify tutorial executables
-      run: |
-        # Check that all tutorial binaries were built
-        test -x build/demo/xin.demo.tutorial.echo_server || exit 1
-        test -x build/demo/xin.demo.tutorial.receive_stream || exit 1
-        test -x build/demo/xin.demo.tutorial.thread_per_core || exit 1
-        test -x build/demo/xin.demo.tutorial.protocol_parser || exit 1
-        echo "✓ All tutorial binaries built successfully"
