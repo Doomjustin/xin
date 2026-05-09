@@ -61,7 +61,7 @@ public:
     }
 
 private:
-    std::atomic_flag flag_{};
+    std::atomic_flag flag_;
 };
 
 } // namespace xin
