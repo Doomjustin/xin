@@ -1,0 +1,7 @@
+.git
+build
+.vscode
+.vcpkg-cache
+vcpkg
+vcpkg_installed
+compile_commands.json

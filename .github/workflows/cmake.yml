@@ -1,0 +1,99 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - uses: docker/setup-buildx-action@v3
+
+    - name: Cache vcpkg source tree
+      uses: actions/cache@v5
+      with:
+        path: vcpkg
+        key: vcpkg-src-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+        restore-keys: |
+          vcpkg-src-${{ runner.os }}-
+
+    - name: Cache vcpkg binary artifacts
+      uses: actions/cache@v5
+      with:
+        path: |
+          .vcpkg-cache
+          vcpkg/downloads
+        key: vcpkg-bin-${{ runner.os }}-clang23-x64-linux-${{ hashFiles('vcpkg.json') }}
+        restore-keys: |
+          vcpkg-bin-${{ runner.os }}-clang23-x64-linux-
+
+    - name: Build CI image
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: .github/docker/ci.Dockerfile
+        load: true
+        tags: xin-ci:latest
+        cache-from: type=gha,scope=xin-ci-image
+        cache-to: type=gha,mode=max,scope=xin-ci-image
+
+    - name: Setup vcpkg and cache dirs
+      run: |
+        mkdir -p .vcpkg-cache vcpkg/downloads
+        docker run --rm \
+          --user "$(id -u):$(id -g)" \
+          -e VCPKG_DEFAULT_BINARY_CACHE=/workspace/.vcpkg-cache \
+          -e VCPKG_BINARY_SOURCES="clear;files,/workspace/.vcpkg-cache,readwrite" \
+          -v "$PWD:/workspace" \
+          -w /workspace \
+          xin-ci:latest \
+          bash /workspace/.github/scripts/ci/setup_vcpkg.sh
+
+    - name: Configure CMake
+      run: |
+        docker run --rm \
+          --user "$(id -u):$(id -g)" \
+          -e VCPKG_DEFAULT_BINARY_CACHE=/workspace/.vcpkg-cache \
+          -e VCPKG_BINARY_SOURCES="clear;files,/workspace/.vcpkg-cache,readwrite" \
+          -v "$PWD:/workspace" \
+          -w /workspace \
+          xin-ci:latest \
+          bash /workspace/.github/scripts/ci/configure_cmake.sh
+
+    - name: Build library and demos
+      run: |
+        docker run --rm \
+          --user "$(id -u):$(id -g)" \
+          -v "$PWD:/workspace" \
+          -w /workspace \
+          xin-ci:latest \
+          bash /workspace/.github/scripts/ci/build.sh
+
+    - name: Run unit tests
+      run: |
+        docker run --rm \
+          --security-opt seccomp=unconfined \
+          --user "$(id -u):$(id -g)" \
+          -v "$PWD:/workspace" \
+          -w /workspace/build \
+          xin-ci:latest \
+          bash /workspace/.github/scripts/ci/run_tests.sh
+    
+    - name: Verify tutorial executables
+      run: |
+        # Check that all tutorial binaries were built
+        test -x build/demo/xin.demo.tutorial.echo_server || exit 1
+        test -x build/demo/xin.demo.tutorial.receive_stream || exit 1
+        test -x build/demo/xin.demo.tutorial.thread_per_core || exit 1
+        test -x build/demo/xin.demo.tutorial.protocol_parser || exit 1
+        echo "✓ All tutorial binaries built successfully"

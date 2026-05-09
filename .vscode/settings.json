@@ -1,0 +1,32 @@
+{
+    "cmake.outputLogEncoding": "utf-8",
+    "cmake.modifyLists.addNewSourceFiles": "no",
+    "cmake.modifyLists.removeDeletedSourceFiles": "no",
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "clangd.path": "clangd",
+    "cmake.configureSettings": {
+        "CMAKE_TOOLCHAIN_FILE": "${env:VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+    },
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "cmake.debugConfig": {
+        "type": "lldb-dap",
+        "miDebuggerPath": "/home/doom/llvm-project/build/bin/lldb-dap"
+    },
+    // 禁用编辑器保存时自动格式化（由脚本统一接管）
+    "editor.formatOnSave": false,
+    // Run on Save: 保存时自动执行脚本（clang-format + import 排序）
+    "emeraldwalk.runonsave": {
+        "commands": [
+            {
+                "match": "\\.(cpp|hpp|c|h|cc|cxx|cppm|ixx|mpp)$",
+                "cmd": "python3 ${workspaceRoot}/.vscode/scripts/sort_imports.py \"${file}\"",
+                "isAsync": false
+            }
+        ]
+    },
+    "github.copilot.chat.commitMessageGeneration.instructions": [
+        {
+            "file": ".vscode/commit-instructions.txt"
+        }
+    ],
+}

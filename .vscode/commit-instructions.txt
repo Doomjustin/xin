@@ -1,0 +1,20 @@
+必须使用 Conventional Commits 规范。
+格式为：<type>(<scope>): <subject>。不要换行，只保留标题行。
+<type> 只能是：
+- feat: 新功能 (如 C++ 模块增加)
+- fix: 修复 Bug
+- refactor: 重构代码
+- style: 代码格式化
+- test: 增加或修改 Catch2 测试
+- build: 影响 CMake 或 vcpkg 的修改
+- docs: 补充 Doxygen
+- chore: 杂项
+<scope> 必须是英文，代表修改的模块名 (如 network, core)。
+<subject> 必须是中文，简明扼要，动词开头。
+示例：refactor(core): 将裸指针替换为智能指针
+
+【极度重要的原子性原则】：
+每次生成 Commit 前，请分析用户暂存区 (Staged) 的代码。
+1. 如果发现代码包含了多个不相关的修改（例如：既修改了网络库，又修复了 UI 的 Bug），请在 Commit 信息的末尾加上：
+   [WARNING]: 检测到可能包含多个功能点，建议使用 VS Code 部分暂存功能拆分提交！
+2. 不要为了掩盖大提交而使用长篇大论的 subject，只能提炼最主要的一个修改。
