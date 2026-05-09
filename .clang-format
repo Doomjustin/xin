@@ -26,6 +26,7 @@ BreakInheritanceList: BeforeComma
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ConstructorInitializerIndentWidth: 2
 AccessModifierOffset: -4
+BreakTemplateDeclarations: Yes
 
 AllowShortBlocksOnASingleLine: Never
 AllowShortFunctionsOnASingleLine: Empty
