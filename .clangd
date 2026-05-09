@@ -13,6 +13,7 @@ Diagnostics:
     Remove:
       - "readability-braces-around-statements"
       - "readability-identifier-length"
+      - "readability-magic-numbers"
       - "performance-enum-size"
 
 InlayHints:
