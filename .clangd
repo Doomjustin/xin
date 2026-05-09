@@ -12,6 +12,8 @@ Diagnostics:
       - "readability-*"
     Remove:
       - "readability-braces-around-statements"
+      - "readability-identifier-length"
+      - "performance-enum-size"
 
 InlayHints:
   Enabled: true

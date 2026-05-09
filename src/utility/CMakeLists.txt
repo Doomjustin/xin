@@ -21,6 +21,7 @@ target_sources(xin.utility
 target_link_libraries(xin.utility 
     PRIVATE 
         spdlog::spdlog
+        magic_enum::magic_enum
 )
 
 set_property(TARGET xin.utility PROPERTY CXX_MODULE_STD ON)
