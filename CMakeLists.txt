@@ -39,3 +39,6 @@ pkg_check_modules(jemalloc REQUIRED IMPORTED_TARGET jemalloc)
 if (${PROJECT_NAME}_BUILD_TESTS)
     find_package(Catch2 CONFIG REQUIRED)
 endif()
+
+
+add_subdirectory(src)
