@@ -25,37 +25,37 @@ public:
 
     virtual ~Logger() = default;
 
-    template <typename... Args>
+    template<typename... Args>
     void trace(std::format_string<Args...> fmt, Args&&... args)
     {
         log(LogLevel::Trace, std::format(fmt, std::forward<Args>(args)...));
     }
 
-    template <typename... Args>
+    template<typename... Args>
     void debug(std::format_string<Args...> fmt, Args&&... args)
     {
         log(LogLevel::Debug, std::format(fmt, std::forward<Args>(args)...));
     }
 
-    template <typename... Args>
+    template<typename... Args>
     void info(std::format_string<Args...> fmt, Args&&... args)
     {
         log(LogLevel::Info, std::format(fmt, std::forward<Args>(args)...));
     }
 
-    template <typename... Args>
+    template<typename... Args>
     void warning(std::format_string<Args...> fmt, Args&&... args)
     {
         log(LogLevel::Warning, std::format(fmt, std::forward<Args>(args)...));
     }
 
-    template <typename... Args>
+    template<typename... Args>
     void error(std::format_string<Args...> fmt, Args&&... args)
     {
         log(LogLevel::Error, std::format(fmt, std::forward<Args>(args)...));
     }
 
-    template <typename... Args>
+    template<typename... Args>
     void critical(std::format_string<Args...> fmt, Args&&... args)
     {
         log(LogLevel::Critical, std::format(fmt, std::forward<Args>(args)...));
@@ -112,37 +112,37 @@ struct log {
         default_logger = std::move(logger);
     }
 
-    template <typename... Args>
+    template<typename... Args>
     static void trace(std::format_string<Args...> fmt, Args&&... args)
     {
         logger().trace(fmt, std::forward<Args>(args)...);
     }
 
-    template <typename... Args>
+    template<typename... Args>
     static void debug(std::format_string<Args...> fmt, Args&&... args)
     {
         logger().debug(fmt, std::forward<Args>(args)...);
     }
 
-    template <typename... Args>
+    template<typename... Args>
     static void info(std::format_string<Args...> fmt, Args&&... args)
     {
         logger().info(fmt, std::forward<Args>(args)...);
     }
 
-    template <typename... Args>
+    template<typename... Args>
     static void warning(std::format_string<Args...> fmt, Args&&... args)
     {
         logger().warning(fmt, std::forward<Args>(args)...);
     }
 
-    template <typename... Args>
+    template<typename... Args>
     static void error(std::format_string<Args...> fmt, Args&&... args)
     {
         logger().error(fmt, std::forward<Args>(args)...);
     }
 
-    template <typename... Args>
+    template<typename... Args>
     static void critical(std::format_string<Args...> fmt, Args&&... args)
     {
         logger().critical(fmt, std::forward<Args>(args)...);

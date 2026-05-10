@@ -4,7 +4,6 @@ import std;
 
 import xin.utility.as_string;
 
-
 namespace {
 
 constexpr auto expected_text = std::string_view{ "xin" };

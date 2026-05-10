@@ -14,7 +14,7 @@ export namespace xin {
 /// std::vector<int> values{ 1, 2, 3 };
 /// auto bytes = xin::buffer(values);
 /// ```
-template <std::ranges::contiguous_range T>
+template<std::ranges::contiguous_range T>
 auto buffer(const T& range) noexcept -> std::span<const std::byte>
 {
     return std::as_bytes(std::span{ range });
@@ -26,7 +26,7 @@ auto buffer(const T& range) noexcept -> std::span<const std::byte>
 /// @return 与输入区间共享同一段内存的 std::span<std::byte>。
 /// @pre range 的底层对象在返回视图的使用期内保持有效。
 /// @note 本函数不分配内存、不拷贝数据。
-template <std::ranges::contiguous_range T>
+template<std::ranges::contiguous_range T>
     requires(!std::is_const_v<std::remove_reference_t<std::ranges::range_reference_t<T>>>)
 auto buffer(T& range) noexcept -> std::span<std::byte>
 {
@@ -35,21 +35,21 @@ auto buffer(T& range) noexcept -> std::span<std::byte>
 
 /// @brief 约束：类型可通过 buffer 生成可写字节视图。
 /// @tparam T 待检测类型。
-template <typename T>
+template<typename T>
 concept mutable_buffer = requires(T& sequence) {
     { buffer(sequence) } -> std::same_as<std::span<std::byte>>;
 };
 
 /// @brief 约束：类型可通过 buffer 生成只读字节视图。
 /// @tparam T 待检测类型。
-template <typename T>
+template<typename T>
 concept const_buffer = requires(const T& sequence) {
     { buffer(sequence) } -> std::same_as<std::span<const std::byte>>;
 };
 
 /// @brief 约束：类型是区间，且其元素类型满足 const_buffer。
 /// @tparam T 待检测区间类型。
-template <typename T>
+template<typename T>
 concept sequence_buffer = std::ranges::range<T> && const_buffer<std::ranges::range_reference_t<T>>;
 
 } // namespace xin

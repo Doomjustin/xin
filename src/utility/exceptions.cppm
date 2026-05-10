@@ -16,7 +16,7 @@ export namespace xin {
 /// ```cpp
 /// xin::throw_system_error(ENOENT, "open {} failed", path);
 /// ```
-template <typename... Args>
+template<typename... Args>
 void throw_system_error(int error, std::format_string<Args...> fmt, Args&&... args)
 {
     throw std::system_error{
@@ -30,7 +30,7 @@ void throw_system_error(int error, std::format_string<Args...> fmt, Args&&... ar
 /// @tparam Args 格式化参数类型。
 /// @param[in] fmt 格式字符串。
 /// @param[in] args 格式化参数。
-template <typename... Args>
+template<typename... Args>
 void throw_system_error(std::format_string<Args...> fmt, Args&&... args)
 {
     throw std::system_error{

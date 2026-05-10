@@ -4,7 +4,6 @@ import std;
 
 import xin.utility.log;
 
-
 namespace {
 
 struct capturing_logger : xin::Logger {

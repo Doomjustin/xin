@@ -23,7 +23,7 @@ struct MPSCQueueNode {
 
 /// @brief 判断类型是否可作为 `MPSCQueue` 的节点。
 /// @tparam T 待检测类型。
-template <typename T>
+template<typename T>
 concept mpsc_queue_node = std::derived_from<T, MPSCQueueNode>;
 
 /// @brief 多生产者单消费者（MPSC）无锁队列。
@@ -45,7 +45,7 @@ concept mpsc_queue_node = std::derived_from<T, MPSCQueueNode>;
 /// ```
 ///
 /// @tparam Node 节点类型，必须派生自 `MPSCQueueNode`。
-template <mpsc_queue_node Node>
+template<mpsc_queue_node Node>
 class MPSCQueue {
 public:
     MPSCQueue() = default;

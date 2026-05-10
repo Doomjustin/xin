@@ -5,7 +5,6 @@ import std;
 
 import xin.utility.tracking_resource;
 
-
 namespace {
 
 constexpr std::size_t element_count = 32U;

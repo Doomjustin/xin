@@ -4,7 +4,6 @@ import std;
 
 import xin.utility.coding;
 
-
 namespace {
 
 constexpr std::uint32_t value_zero = 0U;

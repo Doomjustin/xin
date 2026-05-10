@@ -4,7 +4,6 @@ import std;
 
 import xin.utility.format;
 
-
 namespace {
 
 struct format_as_type {

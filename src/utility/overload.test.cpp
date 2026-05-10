@@ -4,7 +4,6 @@ import std;
 
 import xin.utility.overload;
 
-
 namespace {
 
 using variant_type = std::variant<int, std::string, double>;

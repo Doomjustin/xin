@@ -4,7 +4,6 @@ import std;
 
 import xin.utility.named_type;
 
-
 namespace {
 
 using width_type = xin::NamedType<int, "Width", xin::Comparable, xin::Hashable, xin::Printable>;

@@ -4,7 +4,6 @@ import std;
 
 import xin.utility.cast;
 
-
 TEST_CASE("xin::to_uppercase 将 ASCII 字母转为大写", "[utility][cast]")
 {
     REQUIRE(xin::to_uppercase("xin-123") == "XIN-123");

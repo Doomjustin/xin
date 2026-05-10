@@ -4,7 +4,6 @@ import std;
 
 import xin.utility.random;
 
-
 namespace {
 
 constexpr std::uint32_t seed_value = 123456789U;

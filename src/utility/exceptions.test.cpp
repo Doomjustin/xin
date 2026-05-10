@@ -6,7 +6,6 @@ import std;
 
 import xin.utility.exceptions;
 
-
 namespace {
 
 constexpr auto explicit_message = std::string_view{ "explicit error value" };

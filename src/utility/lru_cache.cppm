@@ -10,7 +10,6 @@ import std;
 
 import xin.utility.hash;
 
-
 export namespace xin {
 
 /// @brief 基于最近最少使用（LRU）策略的定长缓存。
@@ -30,8 +29,8 @@ export namespace xin {
 /// @tparam Value 值类型。
 /// @tparam KeyHash 键哈希器类型。
 /// @tparam KeyEqual 键相等比较器类型。
-template <typename Key, typename Value, typename KeyHash = StringHash,
-          typename KeyEqual = std::equal_to<Key>>
+template<typename Key, typename Value, typename KeyHash = StringHash,
+         typename KeyEqual = std::equal_to<Key>>
 class LRUCache {
 public:
     using resource = std::pmr::memory_resource;
@@ -65,7 +64,7 @@ public:
     /// @brief 插入或更新缓存项，并将其标记为最近使用。
     /// @param[in] key 键。
     /// @param[in] value 值。
-    template <typename K, typename V>
+    template<typename K, typename V>
         requires std::constructible_from<Key, K> && std::constructible_from<Value, V>
     void put(K&& key, V&& value)
     {
@@ -91,7 +90,7 @@ public:
     /// @brief 查找缓存项；命中时返回值引用并提升为最近使用。
     /// @param[in] key 待查找键。
     /// @return 命中时返回值的 `std::reference_wrapper`，未命中返回 `std::nullopt`。
-    template <typename K>
+    template<typename K>
     auto get(const K& key) noexcept -> std::optional<std::reference_wrapper<Value>>
     {
         auto it = cache_.find(key);

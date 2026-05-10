@@ -4,7 +4,6 @@ import std;
 
 import xin.utility.lru_cache;
 
-
 namespace {
 
 using cache_type = xin::LRUCache<std::string, int>;

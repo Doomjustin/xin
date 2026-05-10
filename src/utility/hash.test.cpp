@@ -4,7 +4,6 @@ import std;
 
 import xin.utility.hash;
 
-
 namespace {
 
 constexpr auto text = std::string_view{ "xin" };

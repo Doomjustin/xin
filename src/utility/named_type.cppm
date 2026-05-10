@@ -19,7 +19,7 @@ export namespace xin {
 /// @tparam T 底层值类型。
 /// @tparam Name 类型名字，通常使用字符串字面量。
 /// @tparam Skills 附加行为 mixin 模板。
-template <typename T, FixedString Name, template <typename> class... Skills>
+template<typename T, FixedString Name, template<typename> class... Skills>
     requires std::is_arithmetic_v<T>
 class NamedType : public Skills<NamedType<T, Name, Skills...>>... {
 public:
@@ -62,7 +62,7 @@ private:
 };
 
 /// @brief 为 `NamedType` 增加除法与除法赋值能力。
-template <typename Derived>
+template<typename Derived>
 struct Dividable {
     constexpr auto operator/=(const Derived& other) noexcept -> Derived&
     {
@@ -79,7 +79,7 @@ struct Dividable {
 };
 
 /// @brief 为 `NamedType` 增加前置与后置自减能力。
-template <typename Derived>
+template<typename Derived>
 struct Decrementable {
     constexpr auto operator--() noexcept -> Derived&
     {
@@ -97,7 +97,7 @@ struct Decrementable {
 };
 
 /// @brief 为 `NamedType` 增加前置与后置自增能力。
-template <typename Derived>
+template<typename Derived>
 struct Incrementable {
     constexpr auto operator++() noexcept -> Derived&
     {
@@ -115,7 +115,7 @@ struct Incrementable {
 };
 
 /// @brief 为 `NamedType` 增加加法与加法赋值能力。
-template <typename Derived>
+template<typename Derived>
 struct Addable {
     constexpr auto operator+=(const Derived& other) noexcept -> Derived&
     {
@@ -132,7 +132,7 @@ struct Addable {
 };
 
 /// @brief 为 `NamedType` 增加减法与减法赋值能力。
-template <typename Derived>
+template<typename Derived>
 struct Subtractable {
     constexpr auto operator-=(const Derived& other) noexcept -> Derived&
     {
@@ -149,7 +149,7 @@ struct Subtractable {
 };
 
 /// @brief 为 `NamedType` 增加乘法与乘法赋值能力。
-template <typename Derived>
+template<typename Derived>
 struct Multipliable {
     constexpr auto operator*=(const Derived& other) noexcept -> Derived&
     {
@@ -166,7 +166,7 @@ struct Multipliable {
 };
 
 /// @brief 为 `NamedType` 增加取余与取余赋值能力。
-template <typename Derived>
+template<typename Derived>
 struct RemainderAssignable {
     constexpr auto operator%=(const Derived& other) noexcept -> Derived&
         requires std::integral<typename Derived::value_type>
@@ -194,7 +194,7 @@ struct RemainderAssignable {
 };
 
 /// @brief 聚合常见算术行为的 skill 组合。
-template <typename Derived>
+template<typename Derived>
 struct Arithmetic
   : Decrementable<Derived>
   , Incrementable<Derived>
@@ -205,7 +205,7 @@ struct Arithmetic
   , RemainderAssignable<Derived> {};
 
 /// @brief 为 `NamedType` 增加按位与能力。
-template <typename Derived>
+template<typename Derived>
 struct BitwiseAndAssignable {
     constexpr auto operator&=(const Derived& other) noexcept -> Derived&
         requires std::integral<typename Derived::value_type>
@@ -224,7 +224,7 @@ struct BitwiseAndAssignable {
 };
 
 /// @brief 为 `NamedType` 增加按位或能力。
-template <typename Derived>
+template<typename Derived>
 struct BitwiseOrAssignable {
     constexpr auto operator|=(const Derived& other) noexcept -> Derived&
         requires std::integral<typename Derived::value_type>
@@ -243,7 +243,7 @@ struct BitwiseOrAssignable {
 };
 
 /// @brief 为 `NamedType` 增加按位异或能力。
-template <typename Derived>
+template<typename Derived>
 struct BitwiseXorAssignable {
     constexpr auto operator^=(const Derived& other) noexcept -> Derived&
         requires std::integral<typename Derived::value_type>
@@ -262,14 +262,14 @@ struct BitwiseXorAssignable {
 };
 
 /// @brief 聚合常见按位运算行为的 skill 组合。
-template <typename Derived>
+template<typename Derived>
 struct Bitwise
   : BitwiseAndAssignable<Derived>
   , BitwiseOrAssignable<Derived>
   , BitwiseXorAssignable<Derived> {};
 
 /// @brief 为 `NamedType` 增加比较能力。
-template <typename Derived>
+template<typename Derived>
 struct Comparable {
     [[nodiscard]]
     friend constexpr auto operator<=>(const Derived& lhs, const Derived& rhs)
@@ -285,7 +285,7 @@ struct Comparable {
 };
 
 /// @brief 为 `NamedType` 增加基于底层值的哈希能力。
-template <typename Derived>
+template<typename Derived>
 struct Hashable {
     [[nodiscard]]
     auto hash() const noexcept -> std::size_t
@@ -296,7 +296,7 @@ struct Hashable {
 };
 
 /// @brief 为 `NamedType` 增加基于底层值的流输出能力。
-template <typename Derived>
+template<typename Derived>
 struct Printable {
     friend auto operator<<(std::ostream& os, const Derived& obj) -> std::ostream&
     {
@@ -306,7 +306,7 @@ struct Printable {
 
 } // namespace xin
 
-template <typename T, xin::FixedString Name, template <typename> class... Skills>
+template<typename T, xin::FixedString Name, template<typename> class... Skills>
 struct std::hash<xin::NamedType<T, Name, Skills...>> {
     auto operator()(const xin::NamedType<T, Name, Skills...>& obj) const noexcept -> std::size_t
     {

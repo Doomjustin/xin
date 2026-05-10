@@ -15,7 +15,7 @@ export namespace xin {
 /// ```
 ///
 /// @tparam N 字符数组容量，包含结尾空字符。
-template <std::size_t N>
+template<std::size_t N>
 struct FixedString {
     std::array<char, N> data;
 

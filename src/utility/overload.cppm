@@ -16,14 +16,14 @@ export namespace xin {
 /// ```
 ///
 /// @tparam T 可调用对象类型列表。
-template <typename... T>
+template<typename... T>
 struct Overload : T... {
     using T::operator()...;
 };
 
 /// @brief `Overload` 的 class template argument deduction guide。
 /// @tparam T 可调用对象类型列表。
-template <typename... T>
+template<typename... T>
 Overload(T...) -> Overload<T...>;
 
 } // namespace xin

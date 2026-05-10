@@ -35,7 +35,7 @@ auto to_lowercase(std::string_view input) -> std::string
 /// ```cpp
 /// const auto value = xin::numeric_cast<int>("42");
 /// ```
-template <typename T>
+template<typename T>
 auto numeric_cast(std::string_view str) -> std::expected<T, std::error_code>
 {
     T value{};
@@ -54,7 +54,7 @@ auto numeric_cast(std::string_view str) -> std::expected<T, std::error_code>
 /// @tparam T 浮点类型。
 /// @param[in] value 待转换浮点值。
 /// @return 成功时返回字符串，失败时返回 `std::error_code`。
-template <std::floating_point T>
+template<std::floating_point T>
 auto string_cast(T value) -> std::expected<std::string, std::error_code>
 {
     // 符号/小数点/指数("e+NNN") 余量

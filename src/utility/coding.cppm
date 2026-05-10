@@ -48,7 +48,7 @@ struct varint {
      * @param value  The unsigned integer to measure.
      * @return 0 if `value < 128`, otherwise the number of continuation bytes.
      */
-    template <std::unsigned_integral T>
+    template<std::unsigned_integral T>
     static auto length(T value) noexcept -> std::size_t
     {
         std::size_t result = 0;
@@ -67,7 +67,7 @@ struct varint {
      * @param value  Unsigned integer to encode.
      * @return Iterator pointing one past the last written byte.
      */
-    template <typename Iterator, std::unsigned_integral T>
+    template<typename Iterator, std::unsigned_integral T>
         requires std::output_iterator<Iterator, std::byte>
     static auto encode(Iterator iter, T value) noexcept -> Iterator
     {
@@ -91,7 +91,7 @@ struct varint {
      * @param value  Unsigned integer to encode.
      * @return Iterator pointing one past the last written byte.
      */
-    template <typename Iterator, std::unsigned_integral T>
+    template<typename Iterator, std::unsigned_integral T>
         requires std::output_iterator<Iterator, char>
     static auto encode(Iterator iter, T value) noexcept -> Iterator
     {
@@ -116,7 +116,7 @@ struct varint {
      *
      * @pre The iterator range contains a complete, valid LEB128 sequence.
      */
-    template <std::unsigned_integral T, std::input_iterator Iterator>
+    template<std::unsigned_integral T, std::input_iterator Iterator>
         requires std::convertible_to<typename std::iterator_traits<Iterator>::value_type, std::byte>
     static auto decode(Iterator iter) noexcept -> std::pair<T, Iterator>
     {
@@ -146,7 +146,7 @@ struct varint {
      *
      * @pre The iterator range contains a complete, valid LEB128 sequence.
      */
-    template <std::unsigned_integral T, std::input_iterator Iterator>
+    template<std::unsigned_integral T, std::input_iterator Iterator>
         requires std::convertible_to<typename std::iterator_traits<Iterator>::value_type, char> ||
                  std::is_same_v<Iterator, const char*>
     static auto decode(Iterator iter) noexcept -> std::pair<T, Iterator>
@@ -198,7 +198,7 @@ struct fixed {
      * @param value  Unsigned integer to encode.
      * @return Iterator pointing one past the last written byte.
      */
-    template <std::unsigned_integral T, std::output_iterator<std::byte> Iterator>
+    template<std::unsigned_integral T, std::output_iterator<std::byte> Iterator>
     static auto encode(Iterator iter, T value) noexcept -> Iterator
     {
         for (std::size_t i = 0; i < sizeof(T); ++i) {
@@ -221,7 +221,7 @@ struct fixed {
      * @param value  Unsigned integer to encode.
      * @return Iterator pointing one past the last written byte.
      */
-    template <typename Iterator, std::unsigned_integral T>
+    template<typename Iterator, std::unsigned_integral T>
         requires std::output_iterator<Iterator, char>
     static auto encode(Iterator iter, T value) noexcept -> Iterator
     {
@@ -244,7 +244,7 @@ struct fixed {
      * @param iter   Input iterator over `std::byte`.
      * @return `{decoded_value, iterator_past_last_read_byte}`.
      */
-    template <std::unsigned_integral T, std::input_iterator Iterator>
+    template<std::unsigned_integral T, std::input_iterator Iterator>
         requires std::convertible_to<typename std::iterator_traits<Iterator>::value_type, std::byte>
     static auto decode(Iterator iter) noexcept -> std::pair<T, Iterator>
     {
@@ -265,7 +265,7 @@ struct fixed {
      * @param iter   Input iterator over `char` or `const char*`.
      * @return `{decoded_value, iterator_past_last_read_byte}`.
      */
-    template <std::unsigned_integral T, std::input_iterator Iterator>
+    template<std::unsigned_integral T, std::input_iterator Iterator>
         requires std::convertible_to<typename std::iterator_traits<Iterator>::value_type, char> ||
                  std::is_same_v<Iterator, const char*>
     static auto decode(Iterator iter) noexcept -> std::pair<T, Iterator>
@@ -286,7 +286,7 @@ struct fixed {
  * @tparam N  Number of bytes to represent (1–sizeof(T)-1).
  * @tparam T  Unsigned integer type of the payload.
  */
-template <std::uint8_t N, std::unsigned_integral T>
+template<std::uint8_t N, std::unsigned_integral T>
 struct PackBytesT {
     T value;
 };
@@ -297,7 +297,7 @@ struct PackBytesT {
  * @tparam N      Number of low-order bytes of `value` to pack.
  * @param value   Source value; only the low N bytes are used.
  */
-template <std::uint8_t N, std::unsigned_integral T>
+template<std::uint8_t N, std::unsigned_integral T>
 constexpr auto pack_bytes(T value) noexcept -> PackBytesT<N, T>
 {
     return PackBytesT<N, T>{ value };
@@ -318,7 +318,7 @@ constexpr auto pack_bytes(T value) noexcept -> PackBytesT<N, T>
  * @param src   Tagged source value produced by `pack_bytes<N>()`.
  * @return New packed value with the low N bytes of `src` inserted.
  */
-template <std::unsigned_integral T, std::unsigned_integral U, std::uint8_t N>
+template<std::unsigned_integral T, std::unsigned_integral U, std::uint8_t N>
     requires(N > 0 && N < sizeof(T) && N <= sizeof(U))
 constexpr auto pack(T dest, PackBytesT<N, U> src) noexcept -> T
 {
@@ -340,7 +340,7 @@ constexpr auto pack(T dest, PackBytesT<N, U> src) noexcept -> T
  * @param packed_value  The packed integer to extract from.
  * @return `{extracted_value, remaining_shifted_value}`.
  */
-template <std::unsigned_integral U, std::uint8_t N, std::unsigned_integral T>
+template<std::unsigned_integral U, std::uint8_t N, std::unsigned_integral T>
     requires(N > 0 && N < sizeof(T) && N <= sizeof(U))
 constexpr auto unpack(const T& packed_value) noexcept -> std::pair<U, T>
 {

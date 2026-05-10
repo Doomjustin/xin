@@ -43,6 +43,7 @@ BreakBeforeConceptDeclarations: Always
 SpacesInAngles: Leave
 
 SpaceBeforeAssignmentOperators: true
+SpaceAfterTemplateKeyword: false
 SpaceBeforeParens: ControlStatements
 SpaceInEmptyParentheses: false
 Cpp11BracedListStyle: false

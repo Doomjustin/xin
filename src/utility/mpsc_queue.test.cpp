@@ -4,7 +4,6 @@ import std;
 
 import xin.utility.mpsc_queue;
 
-
 namespace {
 
 struct node_type : xin::MPSCQueueNode {

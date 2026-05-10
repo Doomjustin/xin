@@ -3,7 +3,7 @@ export module xin.utility;
 export import xin.utility.as_string;
 export import xin.utility.buffer;
 export import xin.utility.cast;
-export import xin.utility.chrono_duration;
+export import xin.utility.chrono;
 export import xin.utility.coding;
 export import xin.utility.exceptions;
 export import xin.utility.fixed_string;

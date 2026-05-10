@@ -4,7 +4,6 @@ import std;
 
 import xin.utility.spin_lock;
 
-
 namespace {
 
 auto increment_with_lock(xin::SpinLock& lock, int& counter, int iterations) -> void

@@ -23,69 +23,69 @@ struct random {
         return dist(engine());
     }
 
-    template <std::integral T = int>
+    template<std::integral T = int>
     static auto uniform(T low, T high) -> T
     {
         std::uniform_int_distribution<T> dist{ low, high - 1 };
         return dist(engine());
     }
 
-    template <std::integral T = int>
+    template<std::integral T = int>
     static auto uniform(T high) -> T
     {
         std::uniform_int_distribution<T> dist{ T{}, high - 1 };
         return dist(engine());
     }
 
-    template <std::floating_point T = double>
+    template<std::floating_point T = double>
     static auto uniform(T low, T high) -> T
     {
         std::uniform_real_distribution<T> dist{ low, high - std::numeric_limits<T>::epsilon() };
         return dist(engine());
     }
 
-    template <std::floating_point T = double>
+    template<std::floating_point T = double>
     static auto uniform(T high) -> T
     {
         std::uniform_real_distribution<T> dist{ T{}, high - std::numeric_limits<T>::epsilon() };
         return dist(engine());
     }
 
-    template <std::integral T = int>
+    template<std::integral T = int>
     static auto geometric_failure(double percentage) -> T
     {
         std::geometric_distribution<T> dist(percentage);
         return dist(engine());
     }
 
-    template <std::integral T = int>
+    template<std::integral T = int>
     static auto binomial(T n, double percentage) -> T
     {
         std::binomial_distribution<T> dist{ n, percentage };
         return dist(engine());
     }
 
-    template <std::floating_point T = double>
+    template<std::floating_point T = double>
     static auto normal(T mean = 0.0, T stddev = 1.0) -> T
     {
         std::normal_distribution<T> dist{ mean, stddev };
         return dist(engine());
     }
 
-    template <std::floating_point T = double>
+    template<std::floating_point T = double>
     static auto exponential(T lambda = 1.0) -> T
     {
         std::exponential_distribution<T> dist(lambda);
         return dist(engine());
     }
 
-    template <std::ranges::range Range>
+    template<std::ranges::range Range>
     static void shuffle(Range&& range)
     {
         std::ranges::shuffle(range, engine());
     }
 
-    template <std::ranges::range Range>
+    template<std::ranges::range Range>
     static auto choice(Range&& range) -> std::remove_reference_t<Range>::const_reference
     {
         assert(!std::ranges::empty(range));
@@ -96,7 +96,7 @@ struct random {
         return *it;
     }
 
-    template <std::ranges::range Range>
+    template<std::ranges::range Range>
     static auto sample(Range&& range, std::remove_reference_t<Range>::size_type count)
     {
         assert(count <= std::ranges::size(range));

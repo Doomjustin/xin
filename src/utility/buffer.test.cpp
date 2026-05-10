@@ -4,7 +4,6 @@ import std;
 
 import xin.utility.buffer;
 
-
 namespace {
 
 constexpr std::size_t word_count{ 3 };
