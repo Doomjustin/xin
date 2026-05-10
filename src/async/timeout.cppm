@@ -58,8 +58,8 @@ public:
         auto* io_sqe = context().sqe();
         auto* timeout_sqe = context().sqe();
         if (!io_sqe || !timeout_sqe) {
-            sanitize_sqe(io_sqe);
-            sanitize_sqe(timeout_sqe);
+            discard(io_sqe);
+            discard(timeout_sqe);
 
             result_ = -EAGAIN;
             return false;
@@ -126,7 +126,7 @@ public:
 
 private:
     /// @brief 将已占用但未使用的 SQE 置为 nop，避免提交脏条目。
-    static void sanitize_sqe(::io_uring_sqe* sqe) noexcept
+    static void discard(::io_uring_sqe* sqe) noexcept
     {
         if (!sqe)
             return;
