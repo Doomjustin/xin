@@ -24,11 +24,9 @@ auto demo(std::stop_token stop_token) -> xin::async::Task<>
 int main(int argc, char* argv[])
 {
     std::stop_source stop_source;
-    xin::async::co_spawn(demo(stop_source.get_token()));
     xin::async::co_spawn(stop(stop_source));
 
-    xin::async::this_coroutine::context().run();
+    xin::async::run(3, stop_source, demo);
 
-    xin::log::info("All tasks completed. Exiting.");
     return 0;
 }

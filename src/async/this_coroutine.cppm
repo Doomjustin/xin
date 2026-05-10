@@ -11,6 +11,12 @@ unsigned entries = 1024;
 
 thread_local xin::async::IOContext* bound_context = nullptr;
 
+auto thread_context() -> xin::async::IOContext&
+{
+    thread_local xin::async::IOContext ctx{ entries };
+    return ctx;
+}
+
 } // namespace detail
 
 export namespace xin::async::this_coroutine {
@@ -20,10 +26,8 @@ auto context() -> IOContext&
     if (detail::bound_context)
         return *detail::bound_context;
 
-    // 没有绑定的上下文，创建一个线程专用的IOContext并绑定
-    // 但是这个context不会被实际使用，在context::run的时候，会被ContextBinder替换掉
-    thread_local auto ctx = std::make_unique<IOContext>(detail::entries);
-    return *ctx;
+    // 没有绑定上下文时，返回当前线程的默认 context。
+    return detail::thread_context();
 }
 
 auto setup_buffer_ring(unsigned entries, unsigned size) -> unsigned
@@ -40,8 +44,7 @@ class ContextBinder {
 public:
     ContextBinder() noexcept
     {
-        thread_local auto ctx = std::make_unique<IOContext>(detail::entries);
-        context_ = ctx.get();
+        context_ = &detail::thread_context();
         previous_ = detail::bound_context;
         detail::bound_context = context_;
     }

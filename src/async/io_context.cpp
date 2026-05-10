@@ -18,9 +18,6 @@ import xin.utility;
 
 namespace xin::async {
 
-/// @brief 运行事件循环直到 work 计数归零。
-///
-/// 运行期间会绑定 `this_coroutine::context()`，并在收到 stop 请求时发起取消。
 void IOContext::run()
 {
     this_coroutine::ContextBinder binder{ *this };
@@ -40,14 +37,12 @@ void IOContext::run()
     }
 }
 
-/// @brief 请求停止事件循环并唤醒 poll 等待。
 void IOContext::stop()
 {
     should_stop_.store(true, std::memory_order_relaxed);
     scheduler_.wakeup();
 }
 
-/// @brief 跟踪一个活动 operation，并增加 work 计数。
 void IOContext::track(gsl::not_null<Operation*> operation) noexcept
 {
     if (!head_) {
@@ -62,7 +57,6 @@ void IOContext::track(gsl::not_null<Operation*> operation) noexcept
     add_work();
 }
 
-/// @brief 将 operation 从活动链表摘除，并减少 work 计数。
 void IOContext::untrack(gsl::not_null<Operation*> operation) noexcept
 {
     if (operation->prev)
@@ -79,8 +73,6 @@ void IOContext::untrack(gsl::not_null<Operation*> operation) noexcept
     drop_work();
 }
 
-/// @brief 向 io_uring 提交取消请求。
-/// @note 同一 operation 只会提交一次 cancel。
 void IOContext::cancel(gsl::not_null<Operation*> operation) noexcept
 {
     if (operation->is_canceling)
@@ -93,7 +85,6 @@ void IOContext::cancel(gsl::not_null<Operation*> operation) noexcept
     }
 }
 
-/// @brief 初始化 io_uring 与 wakeup eventfd。
 IOContext::Scheduler::Scheduler(unsigned entries)
 {
     if (auto res = ::io_uring_queue_init(entries, &ring_, 0); res < 0)
@@ -106,7 +97,6 @@ IOContext::Scheduler::Scheduler(unsigned entries)
     arm_wakeup();
 }
 
-/// @brief 清理调度器并以 `ECANCELED` 完成剩余操作。
 IOContext::Scheduler::~Scheduler()
 {
     auto* operation = cross_thread_operations_.pop_all();
@@ -124,14 +114,12 @@ IOContext::Scheduler::~Scheduler()
     ::close(wakeup_fd_);
 }
 
-/// @brief 向 eventfd 写入唤醒信号，打断 poll 等待。
 void IOContext::Scheduler::wakeup() const noexcept
 {
     std::uint64_t val = 1;
     ::write(wakeup_fd_, &val, sizeof(val));
 }
 
-/// @brief 获取可用 SQE；若队列已满则先提交一次。
 auto IOContext::Scheduler::sqe() -> ::io_uring_sqe*
 {
     auto* sqe = ::io_uring_get_sqe(&ring_);
@@ -145,7 +133,6 @@ auto IOContext::Scheduler::sqe() -> ::io_uring_sqe*
     return sqe;
 }
 
-/// @brief 执行一次调度 tick：处理本地队列、等待 CQE、分发事件。
 void IOContext::Scheduler::schedule(const std::atomic_size_t& tracking)
 {
     process_local_operations();
@@ -180,7 +167,6 @@ void IOContext::Scheduler::schedule(const std::atomic_size_t& tracking)
         pending_cqe_events_.swap(events);
 }
 
-/// @brief 注册 eventfd 的 poll 请求，接收后续 wakeup 事件。
 void IOContext::Scheduler::arm_wakeup()
 {
     auto* sqe = this->sqe();
@@ -191,14 +177,12 @@ void IOContext::Scheduler::arm_wakeup()
     ::io_uring_sqe_set_data64(sqe, WAKEUP_MARKER);
 }
 
-/// @brief 消耗 eventfd 计数，清除 wakeup 可读状态。
 void IOContext::Scheduler::resume_wakeup() const noexcept
 {
     uint64_t val;
     ::read(wakeup_fd_, &val, sizeof(val));
 }
 
-/// @brief 处理跨线程投递队列中的操作。
 void IOContext::Scheduler::process_cross_thread_operations() noexcept
 {
     auto* operation = cross_thread_operations_.pop_all();
@@ -210,7 +194,6 @@ void IOContext::Scheduler::process_cross_thread_operations() noexcept
     }
 }
 
-/// @brief 处理 owner thread 上 submit 的本地操作。
 void IOContext::Scheduler::process_local_operations() noexcept
 {
     std::vector<Operation*> pending_operations;
@@ -220,7 +203,6 @@ void IOContext::Scheduler::process_local_operations() noexcept
         operation->complete(operation->result, 0);
 }
 
-/// @brief 收集 CQE 事件到 `pending_events`，延后统一分发。
 void IOContext::Scheduler::collect_cqe_events(std::vector<PendingEvent>& pending_events,
                                               unsigned& count) noexcept
 {
@@ -247,9 +229,6 @@ void IOContext::Scheduler::collect_cqe_events(std::vector<PendingEvent>& pending
     }
 }
 
-/// @brief 分发收集到的事件。
-///
-/// wakeup 事件会先 drain eventfd，再处理跨线程队列并重新 arm poll。
 void IOContext::Scheduler::dispatch_cqe_events(std::vector<PendingEvent>& pending_events) noexcept
 {
     for (auto& event : pending_events) {
@@ -264,7 +243,6 @@ void IOContext::Scheduler::dispatch_cqe_events(std::vector<PendingEvent>& pendin
     }
 }
 
-/// @brief 释放所有已建立的 buffer ring 与底层内存。
 IOContext::BufferRingGroup::~BufferRingGroup()
 {
     auto release = [this](BufferRing& buffer) -> void {
@@ -280,8 +258,6 @@ IOContext::BufferRingGroup::~BufferRingGroup()
     std::ranges::for_each(group_, release);
 }
 
-/// @brief 创建并注册一个 buffer ring。
-/// @return 新分配的 bgid。
 auto IOContext::BufferRingGroup::setup(::io_uring* ring, unsigned entries, unsigned size)
     -> unsigned
 {
@@ -321,7 +297,6 @@ auto IOContext::BufferRingGroup::setup(::io_uring* ring, unsigned entries, unsig
     return bgid;
 }
 
-/// @brief 将已消费 buffer 按 bid 归还到 ring。
 void IOContext::BufferRingGroup::release(unsigned bgid, unsigned bid)
 {
     if (bgid > MAX_BGID)
@@ -338,7 +313,6 @@ void IOContext::BufferRingGroup::release(unsigned bgid, unsigned bid)
     ++buffer_ring.tail;
 }
 
-/// @brief 设置默认 buffer group。
 void IOContext::BufferRingGroup::set_default_buffer(unsigned bgid)
 {
     if (bgid > MAX_BGID)
