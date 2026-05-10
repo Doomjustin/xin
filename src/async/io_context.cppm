@@ -236,8 +236,8 @@ private:
     Scheduler scheduler_;
     BufferRingGroup buffers_;
 
-    Operation* head_;
-    Operation* tail_;
+    Operation* head_{ nullptr };
+    Operation* tail_{ nullptr };
     std::thread::id thread_id_;
     std::atomic<std::size_t> tracking_operations_{ 0 };
     std::atomic<bool> should_stop_{ false };

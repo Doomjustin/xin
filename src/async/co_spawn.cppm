@@ -86,9 +86,10 @@ struct DetachedTask {
 ///
 /// 示例：
 /// ```cpp
-/// auto worker = []() -> xin::async::Task<void> {
+/// auto worker() -> xin::async::Task<void>
+/// {
 ///     co_return;
-/// };
+/// }
 ///
 /// xin::async::IOContext ctx;
 /// xin::async::co_spawn(ctx, worker());
@@ -116,9 +117,10 @@ auto co_spawn(IOContext& context, Awaitable awaitable) -> DetachedTask
 ///
 /// 示例：
 /// ```cpp
-/// auto worker = []() -> xin::async::Task<void> {
+/// auto worker() -> xin::async::Task<void>
+/// {
 ///     co_return;
-/// };
+/// }
 ///
 /// // 运行线程中已绑定 context 时可直接调用：
 /// xin::async::co_spawn(worker());
