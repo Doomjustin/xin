@@ -10,3 +10,5 @@ export import xin.async.single_shot_operation;
 export import xin.async.sleep;
 export import xin.async.task;
 export import xin.async.this_coroutine;
+export import xin.async.timeout;
+export import xin.async.when_any;
