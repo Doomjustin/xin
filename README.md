@@ -2,46 +2,94 @@
 
 # xin
 
-现代 C++23、LLVM/libc++ modules、vcpkg 与 GitHub Actions 驱动的实验性工程。
+一个基于现代 C++23 的实验性异步运行时项目，使用 LLVM/libc++ modules、CMake、vcpkg 与 GitHub Actions 构建与验证。
 
-`xin` 当前聚焦于打通一条可持续演进的 modern C++ 工程链路，重点覆盖：
+## 项目状态
 
-- CMake 4.3 + Ninja 构建
-- vcpkg manifest 依赖管理
-- GitHub Actions 持续集成
-- 针对 `import std` / libc++ modules 的 CI 配置
-- `clang-format + import` 自动整理脚本
+- 开发阶段：实验性（API 可能调整）
+- 代码状态：可构建，可运行 Demo，包含单元测试
+- CI：默认展示 `main` 分支状态
 
-当前代码仍在逐步补充中，但构建、CI 与开发工具链已经可以独立使用；目前工程基础设施、CI workflow 与本地 preset 已就绪，`src` 目录仍在逐步补充实际实现。
+## 特性
 
-## Build
+- C++23 modules（包含 `import std` 试验链路）
+- 基于 `io_uring` 的异步执行基础设施
+- `Task`/`co_spawn`/`sleep_for` 等 coroutine 组合能力
+- 可取消语义（`stop_token` 传播）
+- CMake + vcpkg manifest + GitHub Actions
 
-### Quick start
+## 环境要求
 
-仓库当前提供的本地 preset：
+- Linux
+- LLVM/Clang（支持 C++23 modules）
+- CMake 4.3+
+- Ninja
+- vcpkg（Manifest 模式）
+- liburing（由 vcpkg 依赖链提供）
 
-- `linux-llvm-cxx23`
+## 构建
 
-具体路径与缓存变量定义见 [CMakePresets.json](CMakePresets.json)。如果你的本机环境不同，需要先调整 preset。
-
-本地构建：
+仓库内置本地 preset：`linux-llvm-cxx23`。
 
 ```bash
 cmake --preset linux-llvm-cxx23
 cmake --build build
 ```
 
-## CI
+如果你的本机路径与工具链不同，请按需调整 [CMakePresets.json](CMakePresets.json)。
 
-GitHub Actions workflow 位于 [./.github/workflows/cmake.yml](.github/workflows/cmake.yml)，当前会在以下事件触发：
+## 运行 Demo
 
-- push 到 `main`
-- push 到 `develop`
-- pull request 到 `main`
-- pull request 到 `develop`
+```bash
+cmake --build build --target xin.example.demo
+./build/examples/xin.example.demo
+```
 
-README 顶部 badge 仅显示 `main` 分支状态。
+当前 Demo 源码见 [examples/demo.cpp](examples/demo.cpp)。
+
+## 最小 Demo
+
+下面示例展示 `Task`、`co_spawn`、`sleep_for` 与 `stop_source` 的组合用法：
+
+```cpp
+import std;
+import xin;
+
+using namespace std::chrono_literals;
+using namespace xin;
+
+auto demo() -> async::Task<>
+{
+	log::info("Hello, async world!");
+	co_await async::sleep_for(10s);
+	log::info("Goodbye, async world!");
+}
+
+auto stop_then(std::stop_source stop_source) -> async::Task<>
+{
+	co_await async::co_spawn(demo());
+
+	log::info("This task will be stopped in 3 seconds.");
+	co_await async::sleep_for(3s);
+	stop_source.request_stop();
+	log::info("Stop requested.");
+}
+
+int main()
+{
+	async::IOContext context;
+
+	std::stop_source stop_source;
+	auto token = stop_source.get_token();
+
+	async::co_spawn(context, token, demo());
+	async::co_spawn(context, token, stop_then(stop_source));
+
+	context.run();
+	return 0;
+}
+```
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT，详见 [LICENSE](LICENSE)。
