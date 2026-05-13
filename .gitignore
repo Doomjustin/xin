@@ -58,3 +58,4 @@ __pycache__/
 # customer
 **/config.cppm
 deprecated/*
+bk/*

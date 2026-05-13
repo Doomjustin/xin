@@ -1,274 +1,239 @@
 module;
 
-#include <cassert>
-
 #include <liburing.h>
 #include <sys/eventfd.h>
 #include <sys/poll.h>
-
-#include <gsl/gsl>
 
 export module xin.async.io_context;
 
 import std;
 
-import xin.async.operation;
+import xin.async.awaiter;
 import xin.utility;
 
 
 export namespace xin::async {
 
-/// @brief 基于 io_uring 的异步执行上下文。
-///
-/// `IOContext` 负责：
-/// - 管理 SQE/CQE 调度循环；
-/// - 跟踪活动 operation 的生命周期；
-/// - 提供跨线程投递与 owner-thread 内快速提交。
 class IOContext {
+private:
+    static constexpr std::uint64_t WAKEUP_MARKER = 1ULL << 63;
+    static constexpr std::uint64_t CANCEL_MARKER = 1ULL << 62;
+
+    ::io_uring ring_;
+    std::thread::id thread_id_;
+    int wakeup_fd_{ -1 };
+
+    // 由于IOcontext的事件循环是单线程的，因此tracking_operations_不需要使用原子操作，直接使用普通的std::size_t即可
+    std::size_t tracking_operations_{ 0 };
+    std::atomic<bool> should_stop_{ false };
+
+    Awaiter* head_{ nullptr };
+    Awaiter* tail_{ nullptr };
+
+    MPSCQueue<Awaiter> cross_thread_awaiters_;
+    std::vector<Awaiter*> local_awaiters_;
+
+    void process_cross_thread_awaiters() noexcept
+    {
+        auto* awaiter = cross_thread_awaiters_.pop_all();
+        while (awaiter) {
+            auto* next = static_cast<Awaiter*>(awaiter->mpsc_next.load(std::memory_order_relaxed));
+            awaiter->resume(awaiter->result, awaiter->flags);
+            awaiter = next;
+        }
+    }
+
+    void process_local_awaiters() noexcept
+    {
+        std::vector<Awaiter*> awaiters;
+        std::swap(awaiters, local_awaiters_);
+
+        for (auto* awaiter : awaiters)
+            awaiter->resume(awaiter->result, awaiter->flags);
+    }
+
+    void wakeup() const noexcept
+    {
+        uint64_t one = 1;
+        ::write(wakeup_fd_, &one, sizeof(one));
+    }
+
+    void resume_wakeup() const noexcept
+    {
+        uint64_t buffer;
+        ::read(wakeup_fd_, &buffer, sizeof(buffer));
+    }
+
+    void schedule()
+    {
+        process_local_awaiters();
+        process_cross_thread_awaiters();
+
+        if (tracking_operations_ == 0)
+            return;
+
+        auto res = ::io_uring_submit_and_wait(&ring_, 1);
+        if (res < 0) {
+            if (res == -EINTR)
+                return;
+
+            throw_system_error(-res, "io_uring_submit_and_wait failed");
+        }
+
+        unsigned count = 0;
+        unsigned head;
+        ::io_uring_cqe* cqe{ nullptr };
+
+        io_uring_for_each_cqe(&ring_, head, cqe)
+        {
+            ++count;
+
+            if (::io_uring_cqe_get_data64(cqe) == WAKEUP_MARKER) {
+                resume_wakeup();
+                break;
+            }
+
+            if (::io_uring_cqe_get_data64(cqe) == CANCEL_MARKER)
+                continue;
+
+            if (::io_uring_cqe_get_data64(cqe) != 0) {
+                auto* awaiter = static_cast<Awaiter*>(::io_uring_cqe_get_data(cqe));
+                untrack(awaiter);
+                awaiter->resume(cqe->res, cqe->flags);
+            }
+        }
+
+        if (count > 0)
+            ::io_uring_cq_advance(&ring_, count);
+    }
+
 public:
-    /// @brief buffer ring 元信息。
-    struct BufferRing {
-        void* base_address{ nullptr };
-        unsigned size{ 0 };
-        unsigned mask{ 0 };
-        unsigned entries{ 0 };
-        std::uint16_t tail{ 0 };
-        ::io_uring_buf_ring* buffer{ nullptr };
-    };
-
-    /// @brief 构造 IOContext。
-    /// @param[in] entries io_uring 队列深度。
-    explicit IOContext(unsigned entries = 1024)
-      : scheduler_{ entries }
-    {}
-
-    IOContext(const IOContext&) = delete;
-    auto operator=(const IOContext&) -> IOContext& = delete;
-
-    IOContext(IOContext&& other) noexcept = delete;
-    auto operator=(IOContext&&) -> IOContext& = delete;
-
-    ~IOContext() = default;
-
-    /// @brief 运行事件循环直到 work 计数归零。
-    void run();
-
-    /// @brief 请求停止事件循环。
-    void stop();
-
-    [[nodiscard]]
-    /// @brief 获取可写 SQE。
-    auto sqe() noexcept -> ::io_uring_sqe*
+    explicit IOContext(unsigned entries = 256)
     {
-        return scheduler_.sqe();
+        constexpr auto flags = IORING_SETUP_SINGLE_ISSUER | IORING_SETUP_DEFER_TASKRUN;
+        if (auto res = ::io_uring_queue_init(entries, &ring_, flags); res < 0)
+            throw_system_error(-res, "io_uring_queue_init failed");
+
+        wakeup_fd_ = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+        if (wakeup_fd_ < 0)
+            throw_system_error("created eventfd failed");
+
+        auto* wakeup_sqe = sqe();
+        ::io_uring_prep_poll_multishot(wakeup_sqe, wakeup_fd_, POLLIN);
+        ::io_uring_sqe_set_data64(wakeup_sqe, WAKEUP_MARKER);
+        ::io_uring_submit(&ring_);
     }
 
-    /// @brief 获取底层 io_uring 句柄。
-    auto ring() noexcept -> ::io_uring*
+    ~IOContext()
     {
-        return scheduler_.ring();
+        ::io_uring_queue_exit(&ring_);
     }
 
-    [[nodiscard]]
-    /// @brief 获取只读底层 io_uring 句柄。
+    void run()
+    {
+        thread_id_ = std::this_thread::get_id();
+
+        while (tracking_operations_ > 0) {
+            if (should_stop_.load(std::memory_order_relaxed)) {
+                // 取消所有未完成的 awaiter
+                for (auto* awaiter = head_; awaiter; awaiter = awaiter->next)
+                    cancel(*awaiter);
+            }
+
+            schedule();
+        }
+    }
+
+    void stop() noexcept
+    {
+        should_stop_.store(true, std::memory_order_relaxed);
+        wakeup();
+    }
+
     auto ring() const noexcept -> const ::io_uring*
     {
-        return scheduler_.ring();
+        return &ring_;
     }
 
-    /// @brief 跟踪 operation 生命周期并增加 work。
-    void track(gsl::not_null<Operation*> operation) noexcept;
-    /// @brief 摘除 operation 生命周期并减少 work。
-    void untrack(gsl::not_null<Operation*> operation) noexcept;
-
-    /// @brief 提交取消请求。
-    void cancel(gsl::not_null<Operation*> operation) noexcept;
-
-    /// @brief work 计数加一。
-    void add_work() noexcept
+    // 将跨线程的 awaiter 加入队列，投递过来的 awaiter 本身已经携带结果和标志
+    void post(Awaiter* awaiter) noexcept
     {
-        tracking_operations_.fetch_add(1, std::memory_order_relaxed);
+        if (cross_thread_awaiters_.push(awaiter))
+            wakeup();
     }
 
-    /// @brief work 计数减一。
-    void drop_work() noexcept
+    void dispatch(Awaiter* awaiter) noexcept
     {
-        auto prev = tracking_operations_.fetch_sub(1, std::memory_order_relaxed);
-        assert(prev > 0);
+        if (!is_owner_thread()) {
+            post(awaiter);
+            return;
+        }
+
+        local_awaiters_.push_back(awaiter);
     }
 
-    [[nodiscard]]
-    /// @brief 创建 buffer ring。
-    /// @return 新分配的 bgid。
-    auto setup_buffer_ring(unsigned entries, unsigned size) -> unsigned
+    void track(Awaiter* awaiter = nullptr) noexcept
     {
-        return buffers_.setup(scheduler_.ring(), entries, size);
+        if (awaiter) {
+            if (!head_) {
+                head_ = tail_ = awaiter;
+            }
+            else {
+                tail_->next = awaiter;
+                awaiter->prev = tail_;
+                tail_ = awaiter;
+            }
+        }
+
+        ++tracking_operations_;
     }
 
-    /// @brief 归还一个 buffer 到 ring。
-    void release_buffer_ring(unsigned bgid, unsigned bid)
+    void untrack(Awaiter* awaiter = nullptr) noexcept
     {
-        buffers_.release(bgid, bid);
+        if (awaiter) {
+            if (awaiter->prev)
+                awaiter->prev->next = awaiter->next;
+            else
+                head_ = awaiter->next;
+
+            if (awaiter->next)
+                awaiter->next->prev = awaiter->prev;
+            else
+                tail_ = awaiter->prev;
+
+            awaiter->prev = awaiter->next = nullptr;
+        }
+
+        --tracking_operations_;
     }
 
-    /// @brief 设置默认 buffer group。
-    void set_default_buffer(unsigned bgid)
+    void cancel(Awaiter& awaiter) noexcept
     {
-        buffers_.set_default_buffer(bgid);
+        if (awaiter.is_cancelled)
+            return;
+
+        if (auto* cancel_sqe = sqe()) {
+            ::io_uring_prep_cancel(cancel_sqe, &awaiter, 0);
+            ::io_uring_sqe_set_data64(cancel_sqe, CANCEL_MARKER);
+            awaiter.is_cancelled = true;
+        }
     }
 
-    /// @brief 获取默认 buffer group。
-    auto default_buffer() -> std::optional<unsigned>
+    auto sqe() noexcept -> ::io_uring_sqe*
     {
-        return buffers_.default_buffer();
+        auto* sqe = ::io_uring_get_sqe(&ring_);
+        if (!sqe) {
+            ::io_uring_submit(&ring_);
+            return ::io_uring_get_sqe(&ring_);
+        }
+
+        return sqe;
     }
 
-    /// @brief 获取指定 bgid 的 buffer ring 元信息。
-    auto buffer_ring(unsigned bgid) -> BufferRing&
-    {
-        return buffers_.buffer_ring(bgid);
-    }
-
-    /// @brief 跨线程投递 operation。
-    void post(gsl::not_null<Operation*> operation) noexcept
-    {
-        scheduler_.post(operation);
-    }
-
-    /// @brief 在 owner thread 本地提交 operation。
-    void submit(gsl::not_null<Operation*> operation) noexcept
-    {
-        scheduler_.submit(operation);
-    }
-
-    [[nodiscard]]
-    /// @brief 判断当前线程是否为 owner thread。
     auto is_owner_thread() const noexcept -> bool
     {
         return std::this_thread::get_id() == thread_id_;
     }
-
-private:
-    class Scheduler {
-    public:
-        explicit Scheduler(unsigned entries);
-
-        ~Scheduler();
-
-        void wakeup() const noexcept;
-
-        auto sqe() -> ::io_uring_sqe*;
-
-        void schedule(const std::atomic_size_t& tracking);
-
-        void post(gsl::not_null<Operation*> operation) noexcept
-        {
-            // 仅在队列从0->1时才手动唤醒
-            if (cross_thread_operations_.push(operation))
-                wakeup();
-        }
-
-        void submit(gsl::not_null<Operation*> operation) noexcept
-        {
-            local_operations_.push_back(operation);
-        }
-
-        auto ring() noexcept -> ::io_uring*
-        {
-            return &ring_;
-        }
-
-        [[nodiscard]]
-        auto ring() const noexcept -> const ::io_uring*
-        {
-            return &ring_;
-        }
-
-    private:
-        struct PendingEvent {
-            bool is_wakeup{ false };
-            Operation* operation{ nullptr };
-            int result{ 0 };
-            std::uint32_t flags{ 0 };
-        };
-
-        static constexpr auto WAKEUP_MARKER = std::numeric_limits<std::uintptr_t>::max();
-
-        ::io_uring ring_;
-        int wakeup_fd_;
-        ::io_uring_cqe* cqe_{ nullptr };
-
-        MPSCQueue<Operation> cross_thread_operations_;
-        std::vector<Operation*> local_operations_;
-        std::vector<PendingEvent> pending_cqe_events_;
-
-        void arm_wakeup();
-        void resume_wakeup() const noexcept;
-        void process_cross_thread_operations() noexcept;
-        void process_local_operations() noexcept;
-        void collect_cqe_events(std::vector<PendingEvent>& pending_events,
-                                unsigned& count) noexcept;
-        void dispatch_cqe_events(std::vector<PendingEvent>& pending_events) noexcept;
-    };
-
-    class BufferRingGroup {
-    public:
-        explicit BufferRingGroup(
-            std::pmr::memory_resource* resource = std::pmr::get_default_resource())
-          : memory_resource_{ resource }
-        {}
-
-        ~BufferRingGroup();
-
-        auto setup(::io_uring* ring, unsigned entries, unsigned size) -> unsigned;
-        void release(unsigned bgid, unsigned bid);
-
-        void set_default_buffer(unsigned bgid);
-
-        auto default_buffer() -> std::optional<unsigned>
-        {
-            return default_buffer_bgid_;
-        }
-
-        [[nodiscard]]
-        constexpr auto empty() const noexcept -> bool
-        {
-            return next_bgid_ == INIT_BGID;
-        }
-
-        [[nodiscard]]
-        constexpr auto size() const noexcept -> std::size_t
-        {
-            return static_cast<std::size_t>(next_bgid_);
-        }
-
-        auto buffer_ring(unsigned bgid) noexcept -> BufferRing&
-        {
-            assert(bgid < GROUP_SIZE);
-            return group_[bgid];
-        }
-
-    private:
-        static constexpr unsigned GROUP_SIZE = 16;
-        static constexpr unsigned MAX_BGID{ GROUP_SIZE - 1 };
-        static constexpr std::size_t ALIGNMENT = 4096;
-        static constexpr unsigned INIT_BGID{ 0 };
-
-        std::pmr::memory_resource* memory_resource_;
-        ::io_uring* ring_;
-        std::array<BufferRing, GROUP_SIZE> group_;
-        unsigned next_bgid_{ INIT_BGID };
-        std::optional<unsigned> default_buffer_bgid_;
-    };
-
-    Scheduler scheduler_;
-    BufferRingGroup buffers_;
-
-    Operation* head_{ nullptr };
-    Operation* tail_{ nullptr };
-    std::thread::id thread_id_;
-    std::atomic<std::size_t> tracking_operations_{ 0 };
-    std::atomic<bool> should_stop_{ false };
 };
 
 } // namespace xin::async

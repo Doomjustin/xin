@@ -4,29 +4,34 @@ import xin;
 
 
 using namespace std::chrono_literals;
+using namespace xin;
 
-auto stop(std::stop_source& resource) -> xin::async::Task<>
+auto demo() -> async::Task<>
 {
-    co_await xin::async::sleep_for(2s);
-    xin::log::info("Stop requested. Stopping...");
-    resource.request_stop();
+    log::info("Hello, async world!");
+    co_await async::sleep_for(10s);
+    log::info("Goodbye, async world!");
 }
 
-auto demo(std::stop_token stop_token) -> xin::async::Task<>
+auto stop_then(std::stop_source stop_source) -> async::Task<>
 {
-    xin::log::info("Hello, {}!", "world");
+    co_await async::co_spawn(demo());
 
-    co_await xin::async::stop_then(xin::async::sleep_for(5s), stop_token);
-
-    xin::log::info("stopped");
+    log::info("This task will be stopped in 3 seconds.");
+    co_await async::sleep_for(3s);
+    stop_source.request_stop();
+    log::info("Stop requested.");
 }
 
 int main(int argc, char* argv[])
 {
+    async::IOContext context;
+
     std::stop_source stop_source;
-    xin::async::co_spawn(stop(stop_source));
+    auto token = stop_source.get_token();
+    async::co_spawn(context, token, demo());
+    async::co_spawn(context, token, stop_then(stop_source));
 
-    xin::async::run(3, stop_source, demo);
-
+    context.run();
     return 0;
 }
