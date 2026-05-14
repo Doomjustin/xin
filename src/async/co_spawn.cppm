@@ -3,6 +3,8 @@ export module xin.async.co_spawn;
 import std;
 
 import xin.async.io_context;
+import xin.async.shift_to;
+import xin.async.stoppable_promise;
 import xin.async.task;
 import xin.async.this_coro;
 
@@ -12,22 +14,19 @@ export namespace xin::async {
 /// @brief 用于 fire-and-forget 执行的 coroutine 返回类型。
 struct DetachedTask {
     /// @brief DetachedTask 的 promise，实现 IOContext 跟踪与 stop_token 传播。
-    struct promise_type {
-        IOContext* context{ nullptr };
-        std::stop_token stop_token;
-
+    struct promise_type : public StoppablePromise {
         template<typename Awaitable>
         promise_type(IOContext& ctx, Awaitable&& awaitable)
-          : context{ &ctx }
         {
+            this->context = &ctx;
             context->track();
         }
 
         template<typename Awaitable>
         promise_type(IOContext& ctx, std::stop_token token, Awaitable&& awaitable)
-          : context{ &ctx }
-          , stop_token{ std::move(token) }
         {
+            this->context = &ctx;
+            this->stop_token = std::move(token);
             context->track();
         }
 
@@ -55,6 +54,8 @@ struct DetachedTask {
 
         void unhandled_exception() noexcept
         {
+            // 既然是 fire-and-forget，异常无法传播给调用方，因此直接终止程序。
+            // 也可以选择记录日志或其他处理方式，这里为了简化直接终止。
             std::terminate();
         }
     };
@@ -68,6 +69,7 @@ template<typename Awaitable>
     requires std::movable<std::remove_cvref_t<Awaitable>>
 auto co_spawn(IOContext& context, Awaitable awaitable) -> DetachedTask
 {
+    co_await shift_to(context);
     co_await std::move(awaitable);
 }
 
@@ -80,6 +82,7 @@ template<typename Awaitable>
     requires std::movable<std::remove_cvref_t<Awaitable>>
 auto co_spawn(IOContext& context, std::stop_token stop_token, Awaitable awaitable) -> DetachedTask
 {
+    co_await shift_to(context);
     co_await std::move(awaitable);
 }
 
@@ -93,10 +96,10 @@ template<typename Awaitable>
     requires std::movable<std::remove_cvref_t<Awaitable>>
 auto co_spawn(Awaitable awaitable) -> Task<>
 {
-    auto* ctx = co_await this_coro::context;
+    auto& ctx = co_await this_coro::context;
     auto token = co_await this_coro::stop_token;
 
-    co_spawn(*ctx, std::move(token), std::move(awaitable));
+    co_spawn(ctx, std::move(token), std::move(awaitable));
 }
 
 } // namespace xin::async

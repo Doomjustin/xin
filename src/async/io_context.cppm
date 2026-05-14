@@ -23,8 +23,7 @@ private:
     std::thread::id thread_id_;
     int wakeup_fd_{ -1 };
 
-    // 由于IOcontext的事件循环是单线程的，因此tracking_operations_不需要使用原子操作，直接使用普通的std::size_t即可
-    std::size_t tracking_operations_{ 0 };
+    std::atomic<std::size_t> tracking_works_{ 0 };
     std::atomic<bool> should_stop_{ false };
 
     Awaiter* head_{ nullptr };
@@ -69,7 +68,7 @@ private:
         process_local_awaiters();
         process_cross_thread_awaiters();
 
-        if (tracking_operations_ == 0)
+        if (tracking_works_.load(std::memory_order_relaxed) == 0)
             return;
 
         auto res = ::io_uring_submit_and_wait(&ring_, 1);
@@ -133,7 +132,7 @@ public:
     {
         thread_id_ = std::this_thread::get_id();
 
-        while (tracking_operations_ > 0) {
+        while (tracking_works_.load(std::memory_order_relaxed) > 0) {
             if (should_stop_.load(std::memory_order_relaxed)) {
                 // 取消所有未完成的 awaiter
                 for (auto* awaiter = head_; awaiter; awaiter = awaiter->next)
@@ -164,11 +163,6 @@ public:
 
     void dispatch(Awaiter* awaiter) noexcept
     {
-        if (!is_owner_thread()) {
-            post(awaiter);
-            return;
-        }
-
         local_awaiters_.push_back(awaiter);
     }
 
@@ -185,7 +179,7 @@ public:
             }
         }
 
-        ++tracking_operations_;
+        tracking_works_.fetch_add(1, std::memory_order_relaxed);
     }
 
     void untrack(Awaiter* awaiter = nullptr) noexcept
@@ -204,7 +198,7 @@ public:
             awaiter->prev = awaiter->next = nullptr;
         }
 
-        --tracking_operations_;
+        tracking_works_.fetch_sub(1, std::memory_order_relaxed);
     }
 
     void cancel(Awaiter& awaiter) noexcept

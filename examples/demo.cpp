@@ -25,13 +25,8 @@ auto stop_then(std::stop_source stop_source) -> async::Task<>
 
 int main(int argc, char* argv[])
 {
-    async::IOContext context;
-
     std::stop_source stop_source;
     auto token = stop_source.get_token();
-    async::co_spawn(context, token, demo());
-    async::co_spawn(context, token, stop_then(stop_source));
-
-    context.run();
+    async::run(4, token, stop_then, stop_source);
     return 0;
 }
