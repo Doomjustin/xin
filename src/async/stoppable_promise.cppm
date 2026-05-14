@@ -112,7 +112,7 @@ struct StoppablePromise {
     /// @param[in] awaitable 输入 awaitable。
     /// @return 适配后的 awaiter 或原对象转发结果。
     template<typename Awaitable>
-    auto await_transform(Awaitable&& awaitable)
+    auto await_transform(Awaitable&& awaitable) -> decltype(auto)
     {
         using Tag = std::remove_cvref_t<Awaitable>;
 

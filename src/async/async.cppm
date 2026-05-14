@@ -5,6 +5,7 @@ export module xin.async;
 /// 该模块集中导出常用 async 组件，便于外部通过单一 import 使用。
 
 export import xin.async.awaiter;
+export import xin.async.channel;
 export import xin.async.co_spawn;
 export import xin.async.io_context;
 export import xin.async.poll_awaiter;

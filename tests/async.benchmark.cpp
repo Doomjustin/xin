@@ -5,6 +5,7 @@ import std;
 
 import xin.async;
 
+
 // 独立的全局协程，彻底消灭 Lambda 隐式捕获陷阱！
 auto benchmark3_worker(std::atomic<int>& c, std::atomic_flag& d) -> xin::async::Task<>
 {
