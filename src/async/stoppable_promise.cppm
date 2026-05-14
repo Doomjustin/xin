@@ -25,16 +25,13 @@ struct StoppablePromise {
             /// @brief stop 回调：向 IOContext 提交取消请求。
             void operator()()
             {
-                if (wrapper) {
+                if (wrapper)
                     wrapper->context().cancel(wrapper->inner_);
-                    wrapper->is_cancelled_ = true;
-                }
             }
         };
 
         Awaitable inner_;
         StoppablePromise* promise_;
-        bool is_cancelled_{ false };
         std::optional<std::stop_callback<CancelFn>> stop_callback_;
 
     public:
@@ -73,23 +70,22 @@ struct StoppablePromise {
         auto await_suspend(std::coroutine_handle<Promise> handle) noexcept
             -> std::coroutine_handle<>
         {
+            auto inner_handle = inner_.await_suspend(handle, context());
+
             if (promise_->stop_token.stop_possible())
                 stop_callback_.emplace(promise_->stop_token, CancelFn{ this });
 
-            return inner_.await_suspend(handle, context());
+            return inner_handle;
         }
 
-        /// @brief 返回 inner 的结果，若已取消则返回 operation_canceled。
+        /// @brief 返回 inner awaitable 的恢复结果。
+        ///
+        /// 取消结果由底层 awaiter 在 completion 中给出（例如
+        /// `operation_canceled`），此处不再做额外改写。
         /// @return inner 的 await_resume 结果类型。
         auto await_resume() noexcept
         {
-            using ResultType = decltype(inner_.await_resume());
-
-            if (is_cancelled_)
-                return ResultType{ std::unexpect,
-                                   std::make_error_code(std::errc::operation_canceled) };
-
-            return ResultType{ inner_.await_resume() };
+            return inner_.await_resume();
         }
     };
 

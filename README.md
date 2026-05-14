@@ -98,6 +98,8 @@ int main(int argc, char* argv[])
 
 - `awaiter.cppm`：最基础的调度节点与 continuation 转发。
 - `io_context.cppm`：事件循环、SQE/CQE 驱动、跨线程投递与取消。
+- `poll_awaiter.cppm`：基于 `poll` 事件的 awaiter 适配层。
+- `signal.cppm`：`signalfd` 封装与信号异步等待能力。
 - `single_shot_awaiter.cppm` / `timer_awaiter.cppm`：基于 `io_uring` 的 awaiter 适配层。
 - `task.cppm`：lazy 启动的可组合 `Task<T>`。
 - `stoppable_promise.cppm`：`stop_token` 注入与取消传播包装。
@@ -115,6 +117,7 @@ int main(int argc, char* argv[])
 - `shift_to` 在目标线程已匹配时不挂起，否则通过 `IOContext::post` 异步切换。
 - `run` 系列重载创建并驱动 `IOContext`，直到 tracked work 清零。
 - 当 `stop_token` 可用时，`StoppablePromise` 会为 `Awaiter` 派生类型安装取消回调。
+- `IOContext` 使用 `id -> Awaiter*` 的 pending 映射，将 CQE 与 awaiter 进行关联。
 
 ### 设计约束
 
@@ -122,12 +125,13 @@ int main(int argc, char* argv[])
 - 任务生命周期：`co_spawn` 的 detached coroutine 由 promise 内部 `track/untrack` 参与 work 计数，不依赖外部句柄持有。
 - awaiter 约束：需要接入取消传播的 awaitable 应继承 `Awaiter`，以便被 `StoppablePromise` 自动包装。
 - 调度边界：跨线程恢复统一走 `IOContext::post`，同线程短路径可直接进入本地恢复队列。
+- 取消通道：跨线程取消请求通过 `cancel_queue` 入队，由 owner 线程统一提交 cancel SQE。
 
 ### 取消语义
 
 - `stop_token` 为协作式取消信号，不保证“立即停止”。
 - 当 awaitable 为 `Awaiter` 派生类型时，`stop_callback` 会触发 `IOContext::cancel` 提交取消请求。
-- await_resume 阶段若确认已取消，返回 `operation_canceled`，调用方应显式处理错误分支。
+- 取消结果由底层 awaiter completion 决定（通常表现为 `operation_canceled`），调用方应显式处理错误分支。
 
 ### 异常语义
 

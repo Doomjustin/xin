@@ -9,19 +9,18 @@ export namespace xin::async {
 
 /// @brief 事件循环使用的基础 Awaiter 节点。
 ///
-/// Awaiter 同时承担 coroutine continuation 与调度链表节点角色：
+/// Awaiter 同时承担 coroutine continuation 与调度节点角色：
 /// - `handle` 用于恢复当前 coroutine。
 /// - `parent` 用于将 completion 结果向上游 Awaiter 传播。
-/// - `prev/next` 用于挂接到 `IOContext` 的跟踪链表。
+/// - `id` 由 `IOContext::track` 分配，用于与 CQE `user_data` 关联。
+/// - 继承 `MPSCQueueNode`，可用于跨线程投递到执行队列。
 struct Awaiter : public MPSCQueueNode {
     std::coroutine_handle<> handle;
     Awaiter* parent{ nullptr };
-    Awaiter* prev{ nullptr };
-    Awaiter* next{ nullptr };
 
+    std::uint64_t id; // 唯一标识当前 Awaiter 实例，会在注册时被赋予值
     int result;
     std::uint32_t flags;
-    bool is_cancelled{ false };
 
     Awaiter() = default;
 

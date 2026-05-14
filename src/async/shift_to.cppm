@@ -1,5 +1,3 @@
-module;
-#include <coroutine>
 export module xin.async.shift_to;
 
 import std;

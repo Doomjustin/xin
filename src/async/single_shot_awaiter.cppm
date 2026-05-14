@@ -42,8 +42,7 @@ public:
 
         if (auto* sqe = context.sqe()) {
             static_cast<Derived*>(this)->prepare(sqe);
-            ::io_uring_sqe_set_data(sqe, this);
-            context.track(this);
+            context.track(sqe, this);
             return std::noop_coroutine();
         }
 
