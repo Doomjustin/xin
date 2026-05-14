@@ -1,3 +1,5 @@
+module;
+#include <coroutine>
 export module xin.async.stoppable_promise;
 
 import std;
@@ -8,6 +10,18 @@ import xin.async.this_coro;
 
 
 export namespace xin::async {
+
+template<typename Awaitable>
+concept IOAwaitable =
+    requires(Awaitable awaitable, std::coroutine_handle<> handle, IOContext& context) {
+        { awaitable.await_ready() } -> std::convertible_to<bool>;
+
+        {
+            awaitable.await_suspend(handle, context)
+        } -> std::convertible_to<std::coroutine_handle<>>;
+
+        { awaitable.await_resume() };
+    };
 
 /// @brief 为 Task promise 提供 `stop_token` 与 `IOContext` 注入能力。
 struct StoppablePromise {
@@ -142,7 +156,7 @@ struct StoppablePromise {
 
             return Awaiter{ stop_token };
         }
-        else if constexpr (std::derived_from<Tag, Awaiter>) {
+        else if constexpr (IOAwaitable<Awaitable>) {
             return StopTokenWrapper<Awaitable>{ std::forward<Awaitable>(awaitable), this };
         }
         else {

@@ -31,11 +31,9 @@ public:
     /// @brief 挂起当前 coroutine 并投递到目标 IOContext。
     /// @tparam Promise 当前 coroutine 的 promise 类型。
     /// @param[in] handle 当前 coroutine 句柄。
-    /// @param[in] context 当前所在 IOContext（保留接口一致性）。
     /// @return `noop_coroutine`，等待目标线程恢复。
     template<typename Promise>
-    auto await_suspend(std::coroutine_handle<Promise> handle, IOContext& context) noexcept
-        -> std::coroutine_handle<>
+    auto await_suspend(std::coroutine_handle<Promise> handle) noexcept -> std::coroutine_handle<>
     {
         this->handle = handle;
 
@@ -47,12 +45,7 @@ public:
         return std::noop_coroutine();
     }
 
-    /// @brief 切换完成后返回成功。
-    /// @return 始终返回 `std::expected<void, std::error_code>{}`。
-    auto await_resume() const noexcept -> std::expected<void, std::error_code>
-    {
-        return {};
-    }
+    void await_resume() const noexcept {}
 };
 
 /// @brief 构造 `shift_to` awaiter。
